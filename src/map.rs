@@ -7,6 +7,7 @@ pub struct Map<T> {
     data: Vec<T>,
 }
 
+#[allow(dead_code)] // TODO: Remove this once everything is used
 impl<T> Map<T>
 where
     T: Debug + Default + Copy,

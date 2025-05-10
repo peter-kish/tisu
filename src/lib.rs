@@ -4,6 +4,7 @@ mod vector2;
 
 #[cfg(test)]
 mod tests {
+    #[allow(unused_imports)] // TODO: Remove this later
     use super::*;
     use crate::{map::Map, vector2::Vector2u};
 
