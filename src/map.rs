@@ -54,10 +54,24 @@ impl<T> Map<T> {
     where
         T: Clone,
     {
-        if y > self.size.y {
+        if y >= self.size.y {
             Err(RegenError::OutOfBounds)
         } else {
             for x in 0..self.size.x {
+                self.set(Vector2u::new(x, y), value.clone())?;
+            }
+            Ok(())
+        }
+    }
+
+    pub fn v_line(&mut self, x: usize, value: T) -> Result<(), RegenError>
+    where
+        T: Clone,
+    {
+        if x >= self.size.x {
+            Err(RegenError::OutOfBounds)
+        } else {
+            for y in 0..self.size.y {
                 self.set(Vector2u::new(x, y), value.clone())?;
             }
             Ok(())
@@ -132,7 +146,7 @@ mod tests {
 
         let result = map.set(point, 42);
 
-        assert!(result.is_err());
+        assert_eq!(result.err().unwrap(), RegenError::OutOfBounds);
     }
 
     #[test]
@@ -162,6 +176,52 @@ mod tests {
                 } else {
                     assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn test_h_line_failure() {
+        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+
+        let result = map.h_line(10, 42);
+
+        assert_eq!(result.err().unwrap(), RegenError::OutOfBounds);
+        for x in 0..10 {
+            for y in 0..10 {
+                assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
+            }
+        }
+    }
+
+    #[test]
+    fn test_v_line_success() {
+        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+
+        let result = map.v_line(1, 42);
+
+        assert!(result.is_ok());
+        for x in 0..10 {
+            for y in 0..10 {
+                if x == 1 {
+                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+                } else {
+                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_v_line_failure() {
+        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+
+        let result = map.v_line(10, 42);
+
+        assert_eq!(result.err().unwrap(), RegenError::OutOfBounds);
+        for x in 0..10 {
+            for y in 0..10 {
+                assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
             }
         }
     }
