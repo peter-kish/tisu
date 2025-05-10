@@ -43,9 +43,9 @@ mod tests {
 
     #[test]
     fn test_contains_point() {
-        let rect = Rect2::<i32>::new(Vector2::new(0, 0), Vector2::new(10, 10));
+        let rect = Rect2::<i32>::new(Vector2::default(), Vector2::new(10, 10));
 
-        assert!(rect.contains_point(Vector2::new(0, 0)));
+        assert!(rect.contains_point(Vector2::default()));
         assert!(rect.contains_point(Vector2::new(9, 9)));
         assert!(!rect.contains_point(Vector2::new(10, 10)));
     }

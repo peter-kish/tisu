@@ -6,6 +6,15 @@ pub struct Vector2<T> {
 
 pub type Vector2u = Vector2<usize>;
 
+impl<T> Default for Vector2<T>
+where
+    T: Default,
+{
+    fn default() -> Self {
+        Vector2::new(T::default(), T::default())
+    }
+}
+
 impl<T> Vector2<T> {
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
