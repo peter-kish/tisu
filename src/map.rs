@@ -43,10 +43,24 @@ impl<T> Map<T> {
 
     pub fn fill(&mut self, value: T)
     where
-        T: Copy,
+        T: Clone,
     {
         for d in &mut self.data {
-            *d = value;
+            *d = value.clone();
+        }
+    }
+
+    pub fn h_line(&mut self, y: usize, value: T) -> Result<(), RegenError>
+    where
+        T: Clone,
+    {
+        if y > self.size.y {
+            Err(RegenError::OutOfBounds)
+        } else {
+            for x in 0..self.size.x {
+                self.set(Vector2u::new(x, y), value.clone())?;
+            }
+            Ok(())
         }
     }
 
@@ -104,10 +118,10 @@ mod tests {
         let mut map = Map::<i32>::new(Vector2u::new(10, 10));
         let point = Vector2u::new(3, 3);
 
-        let set_result = map.set(point, 42);
+        let result = map.set(point, 42);
         let value = map.get(point).unwrap();
 
-        assert!(set_result.is_ok());
+        assert!(result.is_ok());
         assert_eq!(value, &42);
     }
 
@@ -116,9 +130,9 @@ mod tests {
         let mut map = Map::<i32>::new(Vector2u::new(10, 10));
         let point = Vector2u::new(10, 10);
 
-        let set_result = map.set(point, 42);
+        let result = map.set(point, 42);
 
-        assert!(set_result.is_err());
+        assert!(result.is_err());
     }
 
     #[test]
@@ -130,6 +144,24 @@ mod tests {
         for x in 0..10 {
             for y in 0..10 {
                 assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+            }
+        }
+    }
+
+    #[test]
+    fn test_h_line_success() {
+        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+
+        let result = map.h_line(1, 42);
+
+        assert!(result.is_ok());
+        for x in 0..10 {
+            for y in 0..10 {
+                if y == 1 {
+                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+                } else {
+                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
+                }
             }
         }
     }
