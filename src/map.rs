@@ -48,6 +48,7 @@ where
                 let idx = self.get_idx(Vector2u::new(x, y));
                 print!("{:?}", self.data.get(idx).unwrap());
             }
+            println!();
         }
     }
 }
