@@ -1,18 +1,17 @@
 use crate::regen_error::RegenError;
 use crate::vector2::Vector2u;
-use std::fmt::Debug;
+use std::fmt::Display;
 
 pub struct Map<T> {
     size: Vector2u,
     data: Vec<T>,
 }
 
-#[allow(dead_code)] // TODO: Remove this once everything is used
-impl<T> Map<T>
-where
-    T: Debug + Default + Copy,
-{
-    pub fn new(size: Vector2u) -> Self {
+impl<T> Map<T> {
+    pub fn new(size: Vector2u) -> Self
+    where
+        T: Clone + Default,
+    {
         Self {
             size,
             data: vec![T::default(); size.x * size.y],
@@ -42,11 +41,23 @@ where
         point.y * self.size.x + point.x
     }
 
-    pub fn print(&self) {
+    pub fn fill(&mut self, value: T)
+    where
+        T: Copy,
+    {
+        for d in &mut self.data {
+            *d = value;
+        }
+    }
+
+    pub fn print(&self)
+    where
+        T: Display,
+    {
         for x in 0..self.size.x {
             for y in 0..self.size.y {
                 let idx = self.get_idx(Vector2u::new(x, y));
-                print!("{:?}", self.data.get(idx).unwrap());
+                print!("{}", self.data.get(idx).unwrap());
             }
             println!();
         }
@@ -108,5 +119,18 @@ mod tests {
         let set_result = map.set(point, 42);
 
         assert!(set_result.is_err());
+    }
+
+    #[test]
+    fn test_fill() {
+        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+
+        map.fill(42);
+
+        for x in 0..10 {
+            for y in 0..10 {
+                assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+            }
+        }
     }
 }
