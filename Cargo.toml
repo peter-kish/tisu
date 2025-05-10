@@ -3,4 +3,12 @@ name = "regen"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "regen"
+path = "src/main.rs"
+
+[lib]
+name = "regen"
+path = "src/lib.rs"
+
 [dependencies]
