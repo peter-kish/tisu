@@ -13,9 +13,9 @@ pub type Rect2u = Rect2<usize>;
 impl<T> Rect2<T> {
     pub fn new(position: Vector2<T>, size: Vector2<T>) -> Result<Self, RegenError>
     where
-        T: PartialOrd<i32>,
+        T: PartialOrd + From<u16>,
     {
-        if size.x < 0 || size.y < 0 {
+        if size.x < 0.into() || size.y < 0.into() {
             return Err(RegenError::InvalidArgument);
         }
         Ok(Self { position, size })
@@ -56,7 +56,7 @@ impl<T> Rect2<T> {
 
 impl<T> TryFrom<(T, T, T, T)> for Rect2<T>
 where
-    T: PartialOrd<i32>,
+    T: PartialOrd + std::convert::From<u16>,
 {
     type Error = RegenError;
 
