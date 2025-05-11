@@ -1,4 +1,4 @@
-mod map;
-mod rect2;
-mod regen_error;
-mod vector2;
+pub mod map;
+pub mod rect2;
+pub mod regen_error;
+pub mod vector2;
