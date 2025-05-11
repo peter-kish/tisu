@@ -203,6 +203,15 @@ mod tests {
     }
 
     #[test]
+    fn test_fill_rect_failure() {
+        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+
+        let result = map.fill_rect((8, 8, 3, 3).try_into().unwrap(), 42);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
     fn test_h_line_success() {
         let mut map = Map::<i32>::new(Vector2u::new(10, 10));
 
