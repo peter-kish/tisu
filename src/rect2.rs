@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 use crate::vector2::Vector2;
 
@@ -24,6 +24,14 @@ impl<T> Rect2<T> {
             && point.x < self.position.x + self.size.x
             && point.y < self.position.y + self.size.y
     }
+
+    pub fn contains_rect(&self, rect: Rect2<T>) -> bool
+    where
+        T: PartialOrd + Copy + Add<Output = T> + Sub<Output = T> + From<u16>,
+    {
+        self.contains_point(rect.position)
+            && self.contains_point(rect.position + rect.size - Vector2::one())
+    }
 }
 
 #[cfg(test)]
@@ -48,5 +56,18 @@ mod tests {
         assert!(rect.contains_point(Vector2::default()));
         assert!(rect.contains_point(Vector2::new(9, 9)));
         assert!(!rect.contains_point(Vector2::new(10, 10)));
+    }
+
+    #[test]
+    fn test_contains_rect() {
+        let rect = Rect2::<i32>::new(Vector2::one(), Vector2::new(10, 10));
+
+        assert!(rect.contains_rect(Rect2::<i32>::new(Vector2::one(), Vector2::new(3, 3))));
+        assert!(rect.contains_rect(Rect2::<i32>::new(Vector2::new(8, 8), Vector2::new(3, 3))));
+        assert!(rect.contains_rect(rect));
+
+        assert!(!rect.contains_rect(Rect2::<i32>::new(Vector2::default(), Vector2::new(3, 3))));
+        assert!(!rect.contains_rect(Rect2::<i32>::new(Vector2::default(), Vector2::new(12, 12))));
+        assert!(!rect.contains_rect(Rect2::<i32>::new(Vector2::new(8, 8), Vector2::new(4, 4))));
     }
 }
