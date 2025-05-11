@@ -1,5 +1,6 @@
+use crate::rect2::Rect2u;
 use crate::regen_error::RegenError;
-use crate::vector2::Vector2u;
+use crate::vector2::{Vector2, Vector2u};
 use std::fmt::Display;
 
 pub struct Map<T> {
@@ -48,6 +49,27 @@ impl<T> Map<T> {
         for d in &mut self.data {
             *d = value.clone();
         }
+    }
+
+    pub fn fill_rect(&mut self, rect: Rect2u, value: T) -> Result<(), RegenError>
+    where
+        T: Copy,
+    {
+        if !Rect2u::new(Vector2u::default(), self.size)?.contains_rect(rect) {
+            return Err(RegenError::InvalidArgument);
+        }
+
+        let x_min = rect.get_position().x;
+        let x_max = rect.get_position().x + rect.get_size().x;
+        let y_min = rect.get_position().y;
+        let y_max = rect.get_position().y + rect.get_size().y;
+
+        for x in x_min..x_max {
+            for y in y_min..y_max {
+                self.set(Vector2::new(x, y), value)?;
+            }
+        }
+        Ok(())
     }
 
     pub fn h_line(&mut self, y: usize, value: T) -> Result<(), RegenError>
@@ -158,6 +180,24 @@ mod tests {
         for x in 0..10 {
             for y in 0..10 {
                 assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+            }
+        }
+    }
+
+    #[test]
+    fn test_fill_rect_success() {
+        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+
+        let result = map.fill_rect((0, 0, 3, 3).try_into().unwrap(), 42);
+
+        assert!(result.is_ok());
+        for x in 0..10 {
+            for y in 0..10 {
+                if (0..3).contains(&x) && (0..3).contains(&y) {
+                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+                } else {
+                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
+                }
             }
         }
     }
