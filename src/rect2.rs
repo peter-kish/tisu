@@ -58,7 +58,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_constructor() {
+    fn test_constructor_success() {
         let expected_position = Vector2 { x: 1, y: 2 };
         let expected_size = Vector2 { x: 3, y: 4 };
 
@@ -70,12 +70,29 @@ mod tests {
     }
 
     #[test]
+    fn test_constructor_failure() {
+        let position = Vector2 { x: 1, y: 2 };
+        let size = Vector2 { x: -3, y: 4 };
+
+        let result = Rect2::<i32>::new(position, size);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
     fn test_from() {
         let result = Rect2::<i32>::try_from((1, 2, 3, 4));
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap().position, Vector2 { x: 1, y: 2 });
         assert_eq!(result.unwrap().size, Vector2 { x: 3, y: 4 });
+    }
+
+    #[test]
+    fn test_from_failure() {
+        let result = Rect2::<i32>::try_from((1, 2, -3, -4));
+
+        assert!(result.is_err());
     }
 
     #[test]
