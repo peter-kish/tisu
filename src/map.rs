@@ -1,4 +1,4 @@
-use crate::rect2::Rect2u;
+use crate::rect2::{Rect2, Rect2u};
 use crate::regen_error::RegenError;
 use crate::vector2::{Vector2, Vector2u};
 use std::fmt::Display;
@@ -56,7 +56,7 @@ impl<T> Map<T> {
         T: Copy,
     {
         if !Rect2u::new(Vector2u::default(), self.size)?.contains_rect(rect) {
-            return Err(RegenError::InvalidArgument);
+            return Err(RegenError::OutOfBounds);
         }
 
         let x_min = rect.get_position().x;
@@ -76,11 +76,23 @@ impl<T> Map<T> {
     where
         T: Clone,
     {
-        if y >= self.size.y {
+        self.h_line_rect(Rect2::new(Vector2::default(), self.size)?, y, value)
+    }
+
+    pub fn h_line_rect(&mut self, rect: Rect2u, y: usize, value: T) -> Result<(), RegenError>
+    where
+        T: Clone,
+    {
+        let rect_out_of_bounds = !Rect2u::new(Vector2u::default(), self.size)?.contains_rect(rect);
+        let y_out_of_bounds = y >= rect.get_size().y;
+
+        if rect_out_of_bounds || y_out_of_bounds {
             Err(RegenError::OutOfBounds)
         } else {
-            for x in 0..self.size.x {
-                self.set(Vector2u::new(x, y), value.clone())?;
+            let x_min = rect.get_position().x;
+            let x_max = rect.get_position().x + rect.get_size().x;
+            for x in x_min..x_max {
+                self.set(Vector2::new(x, y), value.clone())?;
             }
             Ok(())
         }
@@ -90,11 +102,23 @@ impl<T> Map<T> {
     where
         T: Clone,
     {
-        if x >= self.size.x {
+        self.v_line_rect(Rect2::new(Vector2::default(), self.size)?, x, value)
+    }
+
+    pub fn v_line_rect(&mut self, rect: Rect2u, x: usize, value: T) -> Result<(), RegenError>
+    where
+        T: Clone,
+    {
+        let rect_out_of_bounds = !Rect2u::new(Vector2u::default(), self.size)?.contains_rect(rect);
+        let x_out_of_bounds = x >= rect.get_size().x;
+
+        if rect_out_of_bounds || x_out_of_bounds {
             Err(RegenError::OutOfBounds)
         } else {
-            for y in 0..self.size.y {
-                self.set(Vector2u::new(x, y), value.clone())?;
+            let y_min = rect.get_position().y;
+            let y_max = rect.get_position().y + rect.get_size().y;
+            for y in y_min..y_max {
+                self.set(Vector2::new(x, y), value.clone())?;
             }
             Ok(())
         }
@@ -244,6 +268,35 @@ mod tests {
     }
 
     #[test]
+    fn test_h_line_rect_success() {
+        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+
+        let result = map.h_line_rect((1, 1, 3, 3).try_into().unwrap(), 1, 42);
+
+        assert!(result.is_ok());
+        for x in 0..10 {
+            for y in 0..10 {
+                if (1..4).contains(&x) && y == 1 {
+                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+                } else {
+                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_h_line_rect_failure() {
+        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+
+        let result1 = map.h_line_rect((1, 1, 10, 10).try_into().unwrap(), 1, 42);
+        let result2 = map.h_line_rect((1, 1, 3, 3).try_into().unwrap(), 3, 42);
+
+        assert_eq!(result1.err().unwrap(), RegenError::OutOfBounds);
+        assert_eq!(result2.err().unwrap(), RegenError::OutOfBounds);
+    }
+
+    #[test]
     fn test_v_line_success() {
         let mut map = Map::<i32>::new(Vector2u::new(10, 10));
 
@@ -273,5 +326,34 @@ mod tests {
                 assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
             }
         }
+    }
+
+    #[test]
+    fn test_v_line_rect_success() {
+        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+
+        let result = map.v_line_rect((1, 1, 3, 3).try_into().unwrap(), 1, 42);
+
+        assert!(result.is_ok());
+        for x in 0..10 {
+            for y in 0..10 {
+                if (1..4).contains(&y) && x == 1 {
+                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+                } else {
+                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_v_line_rect_failure() {
+        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+
+        let result1 = map.v_line_rect((1, 1, 10, 10).try_into().unwrap(), 1, 42);
+        let result2 = map.v_line_rect((1, 1, 3, 3).try_into().unwrap(), 3, 42);
+
+        assert_eq!(result1.err().unwrap(), RegenError::OutOfBounds);
+        assert_eq!(result2.err().unwrap(), RegenError::OutOfBounds);
     }
 }
