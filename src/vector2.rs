@@ -35,6 +35,13 @@ impl<T> Vector2<T> {
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
+
+    pub fn one() -> Self
+    where
+        T: From<u16>,
+    {
+        Vector2::new(T::from(1), T::from(1))
+    }
 }
 
 #[cfg(test)]
@@ -67,5 +74,22 @@ mod tests {
         let result = vector1 - vector2;
 
         assert_eq!(result, Vector2::<i32>::new(-18, 18));
+    }
+
+    #[test]
+    fn test_one() {
+        let one_i32 = Vector2::<i32>::one();
+        let one_u32 = Vector2::<u32>::one();
+        let one_usize = Vector2::<u32>::one();
+        let one_f32 = Vector2::<f32>::one();
+
+        assert_eq!(one_i32.x, 1);
+        assert_eq!(one_i32.y, 1);
+        assert_eq!(one_u32.x, 1);
+        assert_eq!(one_u32.y, 1);
+        assert_eq!(one_usize.x, 1);
+        assert_eq!(one_usize.y, 1);
+        assert_eq!(one_f32.x, 1.0f32);
+        assert_eq!(one_f32.y, 1.0f32);
     }
 }
