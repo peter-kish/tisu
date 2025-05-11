@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn test_contains_point() {
-        let rect = Rect2::<i32>::try_from((0, 0, 10, 10)).expect("Rect2::new failed!");
+        let rect = Rect2::<i32>::try_from((0, 0, 10, 10)).unwrap();
 
         assert!(rect.contains_point(Vector2::default()));
         assert!(rect.contains_point((9, 9).into()));
@@ -120,14 +120,12 @@ mod tests {
 
     #[test]
     fn test_contains_rect() {
-        let rect = Rect2::<i32>::try_from((1, 1, 10, 10)).expect("Rect2::new failed!");
-        let top_left_corner = Rect2::<i32>::try_from((1, 1, 3, 3)).expect("Rect2::new failed!");
-        let bottom_right_corner = Rect2::<i32>::try_from((8, 8, 3, 3)).expect("Rect2::new failed!");
-        let invalid_top_left_corner =
-            Rect2::<i32>::try_from((0, 0, 3, 3)).expect("Rect2::new failed!");
-        let invalid_bottom_right_corner =
-            Rect2::<i32>::try_from((8, 8, 4, 4)).expect("Rect2::new failed!");
-        let enclosing = Rect2::<i32>::try_from((0, 0, 12, 12)).expect("Rect2::new failed!");
+        let rect = Rect2::<i32>::try_from((1, 1, 10, 10)).unwrap();
+        let top_left_corner = Rect2::<i32>::try_from((1, 1, 3, 3)).unwrap();
+        let bottom_right_corner = Rect2::<i32>::try_from((8, 8, 3, 3)).unwrap();
+        let invalid_top_left_corner = Rect2::<i32>::try_from((0, 0, 3, 3)).unwrap();
+        let invalid_bottom_right_corner = Rect2::<i32>::try_from((8, 8, 4, 4)).unwrap();
+        let enclosing = Rect2::<i32>::try_from((0, 0, 12, 12)).unwrap();
 
         assert!(rect.contains_rect(top_left_corner));
         assert!(rect.contains_rect(bottom_right_corner));
