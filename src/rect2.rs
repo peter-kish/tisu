@@ -90,7 +90,7 @@ mod tests {
 
         let result = Rect2::<i32>::new(position, size);
 
-        assert!(result.is_err());
+        assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
     }
 
     #[test]
@@ -106,7 +106,7 @@ mod tests {
     fn test_from_failure() {
         let result = Rect2::<i32>::try_from((1, 2, -3, -4));
 
-        assert!(result.is_err());
+        assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
     }
 
     #[test]

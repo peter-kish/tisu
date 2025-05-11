@@ -170,7 +170,7 @@ mod tests {
 
         let value = map.get(Vector2u::new(10, 10));
 
-        assert!(value.is_err());
+        assert_eq!(value.err().unwrap(), RegenError::OutOfBounds);
     }
 
     #[test]
@@ -232,7 +232,7 @@ mod tests {
 
         let result = map.fill_rect((8, 8, 3, 3).try_into().unwrap(), 42);
 
-        assert!(result.is_err());
+        assert_eq!(result.err().unwrap(), RegenError::OutOfBounds);
     }
 
     #[test]
