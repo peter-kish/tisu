@@ -1,3 +1,5 @@
+use std::ops::{Add, Sub};
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Vector2<T> {
     pub x: T,
@@ -11,7 +13,21 @@ where
     T: Default,
 {
     fn default() -> Self {
-        Vector2::new(T::default(), T::default())
+        Self::new(T::default(), T::default())
+    }
+}
+
+impl<T: Add<Output = T>> Add for Vector2<T> {
+    type Output = Vector2<T>;
+    fn add(self, rhs: Self) -> Self::Output {
+        Vector2::new(self.x + rhs.x, self.y + rhs.y)
+    }
+}
+
+impl<T: Sub<Output = T>> Sub for Vector2<T> {
+    type Output = Vector2<T>;
+    fn sub(self, rhs: Self) -> Self::Output {
+        Vector2::new(self.x - rhs.x, self.y - rhs.y)
     }
 }
 
@@ -31,5 +47,25 @@ mod tests {
 
         assert_eq!(vector.x, 10);
         assert_eq!(vector.y, 10);
+    }
+
+    #[test]
+    fn test_add() {
+        let vector1 = Vector2::<i32>::new(24, 42);
+        let vector2 = Vector2::<i32>::new(42, 24);
+
+        let result = vector1 + vector2;
+
+        assert_eq!(result, Vector2::<i32>::new(66, 66));
+    }
+
+    #[test]
+    fn test_sub() {
+        let vector1 = Vector2::<i32>::new(24, 42);
+        let vector2 = Vector2::<i32>::new(42, 24);
+
+        let result = vector1 - vector2;
+
+        assert_eq!(result, Vector2::<i32>::new(-18, 18));
     }
 }
