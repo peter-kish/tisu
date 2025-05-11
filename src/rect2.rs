@@ -21,6 +21,20 @@ impl<T> Rect2<T> {
         Ok(Self { position, size })
     }
 
+    pub fn get_position(&self) -> Vector2<T>
+    where
+        T: Copy,
+    {
+        self.position
+    }
+
+    pub fn get_size(&self) -> Vector2<T>
+    where
+        T: Copy,
+    {
+        self.size
+    }
+
     pub fn contains_point(&self, point: Vector2<T>) -> bool
     where
         T: PartialOrd + Copy + Add<Output = T>,
@@ -65,8 +79,8 @@ mod tests {
         let result = Rect2::<i32>::new(expected_position, expected_size);
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().position, expected_position);
-        assert_eq!(result.unwrap().size, expected_size);
+        assert_eq!(result.unwrap().get_position(), expected_position);
+        assert_eq!(result.unwrap().get_size(), expected_size);
     }
 
     #[test]
@@ -84,8 +98,8 @@ mod tests {
         let result = Rect2::<i32>::try_from((1, 2, 3, 4));
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().position, Vector2 { x: 1, y: 2 });
-        assert_eq!(result.unwrap().size, Vector2 { x: 3, y: 4 });
+        assert_eq!(result.unwrap().get_position(), Vector2 { x: 1, y: 2 });
+        assert_eq!(result.unwrap().get_size(), Vector2 { x: 3, y: 4 });
     }
 
     #[test]
