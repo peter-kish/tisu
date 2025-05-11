@@ -44,16 +44,33 @@ impl<T> Vector2<T> {
     }
 }
 
+impl<T> From<(T, T)> for Vector2<T>
+where
+    T: PartialOrd + std::convert::From<u16>,
+{
+    fn from(value: (T, T)) -> Self {
+        Self::new(value.0, value.1)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_constructor() {
-        let vector = Vector2::<i32>::new(10, 10);
+        let vector = Vector2::<i32>::new(1, 2);
 
-        assert_eq!(vector.x, 10);
-        assert_eq!(vector.y, 10);
+        assert_eq!(vector.x, 1);
+        assert_eq!(vector.y, 2);
+    }
+
+    #[test]
+    fn test_from() {
+        let vector = Vector2::<i32>::from((1, 2));
+
+        assert_eq!(vector.x, 1);
+        assert_eq!(vector.y, 2);
     }
 
     #[test]
@@ -73,7 +90,7 @@ mod tests {
 
         let result = vector1 - vector2;
 
-        assert_eq!(result, Vector2::<i32>::new(-18, 18));
+        assert_eq!(result, (-18, 18).into());
     }
 
     #[test]

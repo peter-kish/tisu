@@ -66,7 +66,7 @@ impl<T> Map<T> {
 
         for x in x_min..x_max {
             for y in y_min..y_max {
-                self.set(Vector2::new(x, y), value)?;
+                self.set((x, y).into(), value)?;
             }
         }
         Ok(())
@@ -92,7 +92,7 @@ impl<T> Map<T> {
             let x_min = rect.get_position().x;
             let x_max = rect.get_position().x + rect.get_size().x;
             for x in x_min..x_max {
-                self.set(Vector2::new(x, y), value.clone())?;
+                self.set((x, y).into(), value.clone())?;
             }
             Ok(())
         }
@@ -118,7 +118,7 @@ impl<T> Map<T> {
             let y_min = rect.get_position().y;
             let y_max = rect.get_position().y + rect.get_size().y;
             for y in y_min..y_max {
-                self.set(Vector2::new(x, y), value.clone())?;
+                self.set((x, y).into(), value.clone())?;
             }
             Ok(())
         }
@@ -130,7 +130,7 @@ impl<T> Map<T> {
     {
         for x in 0..self.size.x {
             for y in 0..self.size.y {
-                let idx = self.get_idx(Vector2u::new(x, y));
+                let idx = self.get_idx((x, y).into());
                 print!("{}", self.data.get(idx).unwrap());
             }
             println!();
@@ -156,9 +156,9 @@ mod tests {
 
     #[test]
     fn test_get_success() {
-        let map = Map::<i32>::new(Vector2u::new(10, 10));
+        let map = Map::<i32>::new((10, 10).into());
 
-        let value = map.get(Vector2u::new(3, 3));
+        let value = map.get((3, 3).into());
 
         assert!(value.is_ok());
         assert_eq!(value.unwrap(), &0);
@@ -166,16 +166,16 @@ mod tests {
 
     #[test]
     fn test_get_failure() {
-        let map = Map::<i32>::new(Vector2u::new(10, 10));
+        let map = Map::<i32>::new((10, 10).into());
 
-        let value = map.get(Vector2u::new(10, 10));
+        let value = map.get((10, 10).into());
 
         assert_eq!(value.err().unwrap(), RegenError::OutOfBounds);
     }
 
     #[test]
     fn test_set_success() {
-        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+        let mut map = Map::<i32>::new((10, 10).into());
         let point = Vector2u::new(3, 3);
 
         let result = map.set(point, 42);
@@ -187,7 +187,7 @@ mod tests {
 
     #[test]
     fn test_set_failure() {
-        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+        let mut map = Map::<i32>::new((10, 10).into());
         let point = Vector2u::new(10, 10);
 
         let result = map.set(point, 42);
@@ -197,20 +197,20 @@ mod tests {
 
     #[test]
     fn test_fill() {
-        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+        let mut map = Map::<i32>::new((10, 10).into());
 
         map.fill(42);
 
         for x in 0..10 {
             for y in 0..10 {
-                assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+                assert_eq!(map.get((x, y).into()).unwrap(), &42);
             }
         }
     }
 
     #[test]
     fn test_fill_rect_success() {
-        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+        let mut map = Map::<i32>::new((10, 10).into());
 
         let result = map.fill_rect((0, 0, 3, 3).try_into().unwrap(), 42);
 
@@ -218,9 +218,9 @@ mod tests {
         for x in 0..10 {
             for y in 0..10 {
                 if (0..3).contains(&x) && (0..3).contains(&y) {
-                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+                    assert_eq!(map.get((x, y).into()).unwrap(), &42);
                 } else {
-                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
+                    assert_eq!(map.get((x, y).into()).unwrap(), &0);
                 }
             }
         }
@@ -228,7 +228,7 @@ mod tests {
 
     #[test]
     fn test_fill_rect_failure() {
-        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+        let mut map = Map::<i32>::new((10, 10).into());
 
         let result = map.fill_rect((8, 8, 3, 3).try_into().unwrap(), 42);
 
@@ -237,7 +237,7 @@ mod tests {
 
     #[test]
     fn test_h_line_success() {
-        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+        let mut map = Map::<i32>::new((10, 10).into());
 
         let result = map.h_line(1, 42);
 
@@ -245,9 +245,9 @@ mod tests {
         for x in 0..10 {
             for y in 0..10 {
                 if y == 1 {
-                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+                    assert_eq!(map.get((x, y).into()).unwrap(), &42);
                 } else {
-                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
+                    assert_eq!(map.get((x, y).into()).unwrap(), &0);
                 }
             }
         }
@@ -255,21 +255,21 @@ mod tests {
 
     #[test]
     fn test_h_line_failure() {
-        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+        let mut map = Map::<i32>::new((10, 10).into());
 
         let result = map.h_line(10, 42);
 
         assert_eq!(result.err().unwrap(), RegenError::OutOfBounds);
         for x in 0..10 {
             for y in 0..10 {
-                assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
+                assert_eq!(map.get((x, y).into()).unwrap(), &0);
             }
         }
     }
 
     #[test]
     fn test_h_line_rect_success() {
-        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+        let mut map = Map::<i32>::new((10, 10).into());
 
         let result = map.h_line_rect((1, 1, 3, 3).try_into().unwrap(), 1, 42);
 
@@ -277,9 +277,9 @@ mod tests {
         for x in 0..10 {
             for y in 0..10 {
                 if (1..4).contains(&x) && y == 1 {
-                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+                    assert_eq!(map.get((x, y).into()).unwrap(), &42);
                 } else {
-                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
+                    assert_eq!(map.get((x, y).into()).unwrap(), &0);
                 }
             }
         }
@@ -287,7 +287,7 @@ mod tests {
 
     #[test]
     fn test_h_line_rect_failure() {
-        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+        let mut map = Map::<i32>::new((10, 10).into());
 
         let result1 = map.h_line_rect((1, 1, 10, 10).try_into().unwrap(), 1, 42);
         let result2 = map.h_line_rect((1, 1, 3, 3).try_into().unwrap(), 3, 42);
@@ -298,7 +298,7 @@ mod tests {
 
     #[test]
     fn test_v_line_success() {
-        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+        let mut map = Map::<i32>::new((10, 10).into());
 
         let result = map.v_line(1, 42);
 
@@ -306,9 +306,9 @@ mod tests {
         for x in 0..10 {
             for y in 0..10 {
                 if x == 1 {
-                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+                    assert_eq!(map.get((x, y).into()).unwrap(), &42);
                 } else {
-                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
+                    assert_eq!(map.get((x, y).into()).unwrap(), &0);
                 }
             }
         }
@@ -316,21 +316,21 @@ mod tests {
 
     #[test]
     fn test_v_line_failure() {
-        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+        let mut map = Map::<i32>::new((10, 10).into());
 
         let result = map.v_line(10, 42);
 
         assert_eq!(result.err().unwrap(), RegenError::OutOfBounds);
         for x in 0..10 {
             for y in 0..10 {
-                assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
+                assert_eq!(map.get((x, y).into()).unwrap(), &0);
             }
         }
     }
 
     #[test]
     fn test_v_line_rect_success() {
-        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+        let mut map = Map::<i32>::new((10, 10).into());
 
         let result = map.v_line_rect((1, 1, 3, 3).try_into().unwrap(), 1, 42);
 
@@ -338,9 +338,9 @@ mod tests {
         for x in 0..10 {
             for y in 0..10 {
                 if (1..4).contains(&y) && x == 1 {
-                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &42);
+                    assert_eq!(map.get((x, y).into()).unwrap(), &42);
                 } else {
-                    assert_eq!(map.get(Vector2u::new(x, y)).unwrap(), &0);
+                    assert_eq!(map.get((x, y).into()).unwrap(), &0);
                 }
             }
         }
@@ -348,7 +348,7 @@ mod tests {
 
     #[test]
     fn test_v_line_rect_failure() {
-        let mut map = Map::<i32>::new(Vector2u::new(10, 10));
+        let mut map = Map::<i32>::new((10, 10).into());
 
         let result1 = map.v_line_rect((1, 1, 10, 10).try_into().unwrap(), 1, 42);
         let result2 = map.v_line_rect((1, 1, 3, 3).try_into().unwrap(), 3, 42);

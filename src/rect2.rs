@@ -73,8 +73,8 @@ mod tests {
 
     #[test]
     fn test_constructor_success() {
-        let expected_position = Vector2 { x: 1, y: 2 };
-        let expected_size = Vector2 { x: 3, y: 4 };
+        let expected_position = Vector2::new(1, 2);
+        let expected_size = Vector2::new(3, 4);
 
         let result = Rect2::<i32>::new(expected_position, expected_size);
 
@@ -85,8 +85,8 @@ mod tests {
 
     #[test]
     fn test_constructor_failure() {
-        let position = Vector2 { x: 1, y: 2 };
-        let size = Vector2 { x: -3, y: 4 };
+        let position = Vector2::new(1, 2);
+        let size = Vector2::new(-3, 4);
 
         let result = Rect2::<i32>::new(position, size);
 
@@ -98,8 +98,8 @@ mod tests {
         let result = Rect2::<i32>::try_from((1, 2, 3, 4));
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().get_position(), Vector2 { x: 1, y: 2 });
-        assert_eq!(result.unwrap().get_size(), Vector2 { x: 3, y: 4 });
+        assert_eq!(result.unwrap().get_position(), (1, 2).into());
+        assert_eq!(result.unwrap().get_size(), (3, 4).into());
     }
 
     #[test]
@@ -114,8 +114,8 @@ mod tests {
         let rect = Rect2::<i32>::try_from((0, 0, 10, 10)).expect("Rect2::new failed!");
 
         assert!(rect.contains_point(Vector2::default()));
-        assert!(rect.contains_point(Vector2::new(9, 9)));
-        assert!(!rect.contains_point(Vector2::new(10, 10)));
+        assert!(rect.contains_point((9, 9).into()));
+        assert!(!rect.contains_point((10, 10).into()));
     }
 
     #[test]
