@@ -72,14 +72,23 @@ impl<T> Map<T> {
         Ok(())
     }
 
-    pub fn h_line(&mut self, y: usize, value: T) -> Result<(), RegenError>
+    pub fn h_line(
+        &mut self,
+        y: usize,
+        value: T,
+    ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
     where
         T: Clone,
     {
         self.h_line_rect(Rect2::new(Vector2::default(), self.size)?, y, value)
     }
 
-    pub fn h_line_rect(&mut self, rect: Rect2u, y: usize, value: T) -> Result<(), RegenError>
+    pub fn h_line_rect(
+        &mut self,
+        rect: Rect2u,
+        y: usize,
+        value: T,
+    ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
     where
         T: Clone,
     {
@@ -94,18 +103,28 @@ impl<T> Map<T> {
             for x in x_min..x_max {
                 self.set((x, y).into(), value.clone())?;
             }
-            Ok(())
+
+            Ok((Self::get_rect_above(rect, y), Self::get_rect_below(rect, y)))
         }
     }
 
-    pub fn v_line(&mut self, x: usize, value: T) -> Result<(), RegenError>
+    pub fn v_line(
+        &mut self,
+        x: usize,
+        value: T,
+    ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
     where
         T: Clone,
     {
         self.v_line_rect(Rect2::new(Vector2::default(), self.size)?, x, value)
     }
 
-    pub fn v_line_rect(&mut self, rect: Rect2u, x: usize, value: T) -> Result<(), RegenError>
+    pub fn v_line_rect(
+        &mut self,
+        rect: Rect2u,
+        x: usize,
+        value: T,
+    ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
     where
         T: Clone,
     {
@@ -120,7 +139,45 @@ impl<T> Map<T> {
             for y in y_min..y_max {
                 self.set((x, y).into(), value.clone())?;
             }
-            Ok(())
+            Ok((Self::get_rect_left(rect, x), Self::get_rect_right(rect, x)))
+        }
+    }
+
+    fn get_rect_above(rect: Rect2u, y: usize) -> Option<Rect2u> {
+        if y > 0 {
+            let size = Vector2u::new(rect.get_size().x, y);
+            Some(Rect2u::new(rect.get_position(), size).unwrap())
+        } else {
+            None
+        }
+    }
+
+    fn get_rect_left(rect: Rect2u, x: usize) -> Option<Rect2u> {
+        if x > 0 {
+            let size = Vector2u::new(x, rect.get_size().y);
+            Some(Rect2u::new(rect.get_position(), size).unwrap())
+        } else {
+            None
+        }
+    }
+
+    fn get_rect_below(rect: Rect2u, y: usize) -> Option<Rect2u> {
+        if y < rect.get_size().y - 1 {
+            let position = Vector2u::new(rect.get_position().x, y + 1);
+            let size = Vector2u::new(rect.get_size().x, rect.get_size().y - y - 1);
+            Some(Rect2u::new(position, size).unwrap())
+        } else {
+            None
+        }
+    }
+
+    fn get_rect_right(rect: Rect2u, x: usize) -> Option<Rect2u> {
+        if x < rect.get_size().x - 1 {
+            let position = Vector2u::new(x + 1, rect.get_position().y);
+            let size = Vector2u::new(rect.get_size().x - x - 1, rect.get_size().y);
+            Some(Rect2u::new(position, size).unwrap())
+        } else {
+            None
         }
     }
 
