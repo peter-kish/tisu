@@ -106,8 +106,8 @@ impl<T> Map<T> {
             }
 
             Ok((
-                rect2_utils::get_rect_above(rect, y),
-                rect2_utils::get_rect_below(rect, y),
+                rect2_utils::get_rect_above(rect, y)?,
+                rect2_utils::get_rect_below(rect, y)?,
             ))
         }
     }
@@ -144,8 +144,8 @@ impl<T> Map<T> {
                 self.set((x, y).into(), value.clone())?;
             }
             Ok((
-                rect2_utils::get_rect_left(rect, x),
-                rect2_utils::get_rect_right(rect, x),
+                rect2_utils::get_rect_left(rect, x)?,
+                rect2_utils::get_rect_right(rect, x)?,
             ))
         }
     }
