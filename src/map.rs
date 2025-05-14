@@ -266,8 +266,12 @@ mod tests {
         let mut map = Map::<i32>::new((10, 10).into());
 
         let result = map.h_line(1, 42);
+        let expected_upper_rect = Some((0, 0, 10, 1).try_into().unwrap());
+        let expected_lower_rect = Some((0, 2, 10, 8).try_into().unwrap());
 
         assert!(result.is_ok());
+        assert_eq!(result.unwrap().0, expected_upper_rect);
+        assert_eq!(result.unwrap().1, expected_lower_rect);
         for x in 0..10 {
             for y in 0..10 {
                 if y == 1 {
@@ -298,8 +302,12 @@ mod tests {
         let mut map = Map::<i32>::new((10, 10).into());
 
         let result = map.h_line_rect((1, 1, 3, 3).try_into().unwrap(), 1, 42);
+        let expected_upper_rect = Some((1, 1, 3, 1).try_into().unwrap());
+        let expected_lower_rect = Some((1, 3, 3, 1).try_into().unwrap());
 
         assert!(result.is_ok());
+        assert_eq!(result.unwrap().0, expected_upper_rect);
+        assert_eq!(result.unwrap().1, expected_lower_rect);
         for x in 0..10 {
             for y in 0..10 {
                 if (1..4).contains(&x) && y == 1 {
@@ -327,8 +335,12 @@ mod tests {
         let mut map = Map::<i32>::new((10, 10).into());
 
         let result = map.v_line(1, 42);
+        let expected_left_rect = Some((0, 0, 1, 10).try_into().unwrap());
+        let expected_right_rect = Some((2, 0, 8, 10).try_into().unwrap());
 
         assert!(result.is_ok());
+        assert_eq!(result.unwrap().0, expected_left_rect);
+        assert_eq!(result.unwrap().1, expected_right_rect);
         for x in 0..10 {
             for y in 0..10 {
                 if x == 1 {
@@ -359,8 +371,12 @@ mod tests {
         let mut map = Map::<i32>::new((10, 10).into());
 
         let result = map.v_line_rect((1, 1, 3, 3).try_into().unwrap(), 1, 42);
+        let expected_left_rect = Some((1, 1, 1, 3).try_into().unwrap());
+        let expected_right_rect = Some((3, 1, 1, 3).try_into().unwrap());
 
         assert!(result.is_ok());
+        assert_eq!(result.unwrap().0, expected_left_rect);
+        assert_eq!(result.unwrap().1, expected_right_rect);
         for x in 0..10 {
             for y in 0..10 {
                 if (1..4).contains(&y) && x == 1 {
