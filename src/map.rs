@@ -101,14 +101,21 @@ impl<T> Map<T> {
         } else {
             let x_min = rect.get_position().x;
             let x_max = rect.get_position().x + rect.get_size().x;
-            for x in x_min..x_max {
-                self.set((x, y).into(), value.clone())?;
-            }
+            self.h_line_unsafe(y, x_min, x_max, value);
 
             Ok((
                 rect2_utils::get_rect_above(rect, y)?,
                 rect2_utils::get_rect_below(rect, y)?,
             ))
+        }
+    }
+
+    fn h_line_unsafe(&mut self, y: usize, x_min: usize, x_max: usize, value: T)
+    where
+        T: Clone,
+    {
+        for x in x_min..x_max {
+            let _ = self.set((x, y).into(), value.clone());
         }
     }
 
@@ -140,13 +147,21 @@ impl<T> Map<T> {
         } else {
             let y_min = rect.get_position().y;
             let y_max = rect.get_position().y + rect.get_size().y;
-            for y in y_min..y_max {
-                self.set((x, y).into(), value.clone())?;
-            }
+            self.v_line_unsafe(x, y_min, y_max, value);
+
             Ok((
                 rect2_utils::get_rect_left(rect, x)?,
                 rect2_utils::get_rect_right(rect, x)?,
             ))
+        }
+    }
+
+    fn v_line_unsafe(&mut self, x: usize, y_min: usize, y_max: usize, value: T)
+    where
+        T: Clone,
+    {
+        for y in y_min..y_max {
+            let _ = self.set((x, y).into(), value.clone());
         }
     }
 
