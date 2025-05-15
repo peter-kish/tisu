@@ -1,5 +1,5 @@
 use map::Map;
-use vector2::Vector2u;
+use vector2::Vector2u32;
 
 mod map;
 mod rect2;
@@ -41,23 +41,16 @@ impl From<&MapTile> for Rgb<u8> {
 }
 
 fn generate_map() -> Map<MapTile> {
-    let mut map = Map::<MapTile>::new(Vector2u::new(20, 20));
+    let mut map = Map::<MapTile>::new(Vector2u32::new(20, 20));
     map.v_line(10, MapTile::Asphalt).expect("v_line_failed");
     map
 }
 
 fn draw_map(map: Map<MapTile>) -> RgbImage {
-    let mut image = RgbImage::new(
-        map.get_size().x.try_into().unwrap(),
-        map.get_size().y.try_into().unwrap(),
-    );
+    let mut image = RgbImage::new(map.get_size().x, map.get_size().y);
     for x in 0..map.get_size().x {
         for y in 0..map.get_size().y {
-            image.put_pixel(
-                x.try_into().unwrap(),
-                y.try_into().unwrap(),
-                map.get((x, y).into()).unwrap().into(),
-            );
+            image.put_pixel(x, y, map.get((x, y).into()).unwrap().into());
         }
     }
     image

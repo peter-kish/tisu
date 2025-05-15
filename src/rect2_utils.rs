@@ -1,46 +1,46 @@
-use crate::{rect2::Rect2u, regen_error::RegenError, vector2::Vector2u};
+use crate::{rect2::Rect2u32, regen_error::RegenError, vector2::Vector2u32};
 
-pub fn get_rect_above(rect: Rect2u, y: usize) -> Result<Option<Rect2u>, RegenError> {
+pub fn get_rect_above(rect: Rect2u32, y: u32) -> Result<Option<Rect2u32>, RegenError> {
     if y > rect.get_size().y - 1 {
         Err(RegenError::OutOfBounds)
     } else if y > 0 {
-        let size = Vector2u::new(rect.get_size().x, y);
-        Ok(Some(Rect2u::new(rect.get_position(), size).unwrap()))
+        let size = Vector2u32::new(rect.get_size().x, y);
+        Ok(Some(Rect2u32::new(rect.get_position(), size).unwrap()))
     } else {
         Ok(None)
     }
 }
 
-pub fn get_rect_left(rect: Rect2u, x: usize) -> Result<Option<Rect2u>, RegenError> {
+pub fn get_rect_left(rect: Rect2u32, x: u32) -> Result<Option<Rect2u32>, RegenError> {
     if x > rect.get_size().x - 1 {
         Err(RegenError::OutOfBounds)
     } else if x > 0 {
-        let size = Vector2u::new(x, rect.get_size().y);
-        Ok(Some(Rect2u::new(rect.get_position(), size).unwrap()))
+        let size = Vector2u32::new(x, rect.get_size().y);
+        Ok(Some(Rect2u32::new(rect.get_position(), size).unwrap()))
     } else {
         Ok(None)
     }
 }
 
-pub fn get_rect_below(rect: Rect2u, y: usize) -> Result<Option<Rect2u>, RegenError> {
+pub fn get_rect_below(rect: Rect2u32, y: u32) -> Result<Option<Rect2u32>, RegenError> {
     match y {
         _ if y > rect.get_size().y - 1 => Err(RegenError::OutOfBounds),
         _ if y < rect.get_size().y - 1 => {
-            let position = Vector2u::new(rect.get_position().x, rect.get_position().y + y + 1);
-            let size = Vector2u::new(rect.get_size().x, rect.get_size().y - y - 1);
-            Ok(Some(Rect2u::new(position, size).unwrap()))
+            let position = Vector2u32::new(rect.get_position().x, rect.get_position().y + y + 1);
+            let size = Vector2u32::new(rect.get_size().x, rect.get_size().y - y - 1);
+            Ok(Some(Rect2u32::new(position, size).unwrap()))
         }
         _ => Ok(None),
     }
 }
 
-pub fn get_rect_right(rect: Rect2u, x: usize) -> Result<Option<Rect2u>, RegenError> {
+pub fn get_rect_right(rect: Rect2u32, x: u32) -> Result<Option<Rect2u32>, RegenError> {
     match x {
         _ if x > rect.get_size().x - 1 => Err(RegenError::OutOfBounds),
         _ if x < rect.get_size().x - 1 => {
-            let position = Vector2u::new(rect.get_position().x + x + 1, rect.get_position().y);
-            let size = Vector2u::new(rect.get_size().x - x - 1, rect.get_size().y);
-            Ok(Some(Rect2u::new(position, size).unwrap()))
+            let position = Vector2u32::new(rect.get_position().x + x + 1, rect.get_position().y);
+            let size = Vector2u32::new(rect.get_size().x - x - 1, rect.get_size().y);
+            Ok(Some(Rect2u32::new(position, size).unwrap()))
         }
         _ => Ok(None),
     }
@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn test_get_rect_above_success() {
-        let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
+        let rect = Rect2u32::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
         let above_result = get_rect_above(rect, 1);
         let above_upper_limit_result = get_rect_above(rect, 0);
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn test_get_rect_above_failure() {
-        let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
+        let rect = Rect2u32::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
         let above_invalid_result = get_rect_above(rect, 3);
         assert!(above_invalid_result.is_err());
@@ -87,7 +87,7 @@ mod tests {
 
     #[test]
     fn test_get_rect_left_success() {
-        let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
+        let rect = Rect2u32::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
         let left_result = get_rect_left(rect, 1);
         let left_of_left_limit_result = get_rect_left(rect, 0);
@@ -113,7 +113,7 @@ mod tests {
 
     #[test]
     fn test_get_rect_left_failure() {
-        let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
+        let rect = Rect2u32::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
         let left_of_invalid_result = get_rect_left(rect, 3);
         assert!(left_of_invalid_result.is_err());
@@ -123,7 +123,7 @@ mod tests {
 
     #[test]
     fn test_get_rect_below_success() {
-        let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
+        let rect = Rect2u32::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
         let below_result = get_rect_below(rect, 1);
         let below_upper_limit_result = get_rect_below(rect, 0);
@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn test_get_rect_below_failure() {
-        let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
+        let rect = Rect2u32::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
         let below_invalid_result = get_rect_below(rect, 3);
         assert!(below_invalid_result.is_err());
@@ -156,7 +156,7 @@ mod tests {
 
     #[test]
     fn test_get_rect_right_success() {
-        let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
+        let rect = Rect2u32::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
         let right_result = get_rect_right(rect, 1);
         let right_of_upper_limit_result = get_rect_right(rect, 0);
@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn test_get_rect_right_failure() {
-        let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
+        let rect = Rect2u32::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
         let right_of_invalid_result = get_rect_right(rect, 3);
         assert!(right_of_invalid_result.is_err());

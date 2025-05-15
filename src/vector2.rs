@@ -6,7 +6,7 @@ pub struct Vector2<T> {
     pub y: T,
 }
 
-pub type Vector2u = Vector2<usize>;
+pub type Vector2u32 = Vector2<u32>;
 
 impl<T> Default for Vector2<T>
 where

@@ -1,26 +1,26 @@
-use crate::rect2::{Rect2, Rect2u};
+use crate::rect2::{Rect2, Rect2u32};
 use crate::rect2_utils;
 use crate::regen_error::RegenError;
-use crate::vector2::{Vector2, Vector2u};
+use crate::vector2::{Vector2, Vector2u32};
 use std::fmt::Display;
 
 pub struct Map<T> {
-    size: Vector2u,
+    size: Vector2u32,
     data: Vec<T>,
 }
 
 impl<T> Map<T> {
-    pub fn new(size: Vector2u) -> Self
+    pub fn new(size: Vector2u32) -> Self
     where
         T: Clone + Default,
     {
         Self {
             size,
-            data: vec![T::default(); size.x * size.y],
+            data: vec![T::default(); (size.x * size.y).try_into().unwrap()],
         }
     }
 
-    pub fn get_size(&self) -> Vector2u {
+    pub fn get_size(&self) -> Vector2u32 {
         self.size
     }
 
@@ -28,19 +28,19 @@ impl<T> Map<T> {
         &self.data
     }
 
-    pub fn get(&self, point: Vector2u) -> Result<&T, RegenError> {
+    pub fn get(&self, point: Vector2u32) -> Result<&T, RegenError> {
         let idx = self.get_idx(point);
         self.data.get(idx).ok_or(RegenError::OutOfBounds)
     }
 
-    pub fn set(&mut self, point: Vector2u, value: T) -> Result<(), RegenError> {
+    pub fn set(&mut self, point: Vector2u32, value: T) -> Result<(), RegenError> {
         let idx = self.get_idx(point);
         *(self.data.get_mut(idx).ok_or(RegenError::OutOfBounds)?) = value;
         Ok(())
     }
 
-    fn get_idx(&self, point: Vector2u) -> usize {
-        point.y * self.size.x + point.x
+    fn get_idx(&self, point: Vector2u32) -> usize {
+        (point.y * self.size.x + point.x).try_into().unwrap()
     }
 
     pub fn fill(&mut self, value: T)
@@ -52,11 +52,11 @@ impl<T> Map<T> {
         }
     }
 
-    pub fn fill_rect(&mut self, rect: Rect2u, value: T) -> Result<(), RegenError>
+    pub fn fill_rect(&mut self, rect: Rect2u32, value: T) -> Result<(), RegenError>
     where
         T: Copy,
     {
-        if !Rect2u::new(Vector2u::default(), self.size)?.contains_rect(rect) {
+        if !Rect2u32::new(Vector2u32::default(), self.size)?.contains_rect(rect) {
             return Err(RegenError::OutOfBounds);
         }
 
@@ -73,11 +73,11 @@ impl<T> Map<T> {
         Ok(())
     }
 
-    pub fn border_rect(&mut self, rect: Rect2u, value: T) -> Result<Option<Rect2u>, RegenError>
+    pub fn border_rect(&mut self, rect: Rect2u32, value: T) -> Result<Option<Rect2u32>, RegenError>
     where
         T: Copy,
     {
-        if !Rect2u::new(Vector2u::default(), self.size)?.contains_rect(rect) {
+        if !Rect2u32::new(Vector2u32::default(), self.size)?.contains_rect(rect) {
             return Err(RegenError::OutOfBounds);
         }
 
@@ -91,10 +91,10 @@ impl<T> Map<T> {
         self.v_line_unsafe(x_min, y_min + 1, y_max - 1, value);
         self.v_line_unsafe(x_max - 1, y_min + 1, y_max - 1, value);
 
-        let rect_size = Vector2u::new(x_max - x_min - 2, y_max - y_min - 2);
+        let rect_size = Vector2u32::new(x_max - x_min - 2, y_max - y_min - 2);
         if rect_size.x > 0 && rect_size.y > 0 {
-            let rect_pos = Vector2u::new(x_min, y_min) + Vector2u::one();
-            Ok(Some(Rect2u::new(rect_pos, rect_size)?))
+            let rect_pos = Vector2u32::new(x_min, y_min) + Vector2u32::one();
+            Ok(Some(Rect2u32::new(rect_pos, rect_size)?))
         } else {
             Ok(None)
         }
@@ -102,9 +102,9 @@ impl<T> Map<T> {
 
     pub fn h_line(
         &mut self,
-        y: usize,
+        y: u32,
         value: T,
-    ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
+    ) -> Result<(Option<Rect2u32>, Option<Rect2u32>), RegenError>
     where
         T: Clone,
     {
@@ -113,14 +113,15 @@ impl<T> Map<T> {
 
     pub fn h_line_rect(
         &mut self,
-        rect: Rect2u,
-        y: usize,
+        rect: Rect2u32,
+        y: u32,
         value: T,
-    ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
+    ) -> Result<(Option<Rect2u32>, Option<Rect2u32>), RegenError>
     where
         T: Clone,
     {
-        let rect_out_of_bounds = !Rect2u::new(Vector2u::default(), self.size)?.contains_rect(rect);
+        let rect_out_of_bounds =
+            !Rect2u32::new(Vector2u32::default(), self.size)?.contains_rect(rect);
         let y_out_of_bounds = y >= rect.get_size().y;
 
         if rect_out_of_bounds || y_out_of_bounds {
@@ -137,7 +138,7 @@ impl<T> Map<T> {
         }
     }
 
-    fn h_line_unsafe(&mut self, y: usize, x_min: usize, x_max: usize, value: T)
+    fn h_line_unsafe(&mut self, y: u32, x_min: u32, x_max: u32, value: T)
     where
         T: Clone,
     {
@@ -148,9 +149,9 @@ impl<T> Map<T> {
 
     pub fn v_line(
         &mut self,
-        x: usize,
+        x: u32,
         value: T,
-    ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
+    ) -> Result<(Option<Rect2u32>, Option<Rect2u32>), RegenError>
     where
         T: Clone,
     {
@@ -159,14 +160,15 @@ impl<T> Map<T> {
 
     pub fn v_line_rect(
         &mut self,
-        rect: Rect2u,
-        x: usize,
+        rect: Rect2u32,
+        x: u32,
         value: T,
-    ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
+    ) -> Result<(Option<Rect2u32>, Option<Rect2u32>), RegenError>
     where
         T: Clone,
     {
-        let rect_out_of_bounds = !Rect2u::new(Vector2u::default(), self.size)?.contains_rect(rect);
+        let rect_out_of_bounds =
+            !Rect2u32::new(Vector2u32::default(), self.size)?.contains_rect(rect);
         let x_out_of_bounds = x >= rect.get_size().x;
 
         if rect_out_of_bounds || x_out_of_bounds {
@@ -183,7 +185,7 @@ impl<T> Map<T> {
         }
     }
 
-    fn v_line_unsafe(&mut self, x: usize, y_min: usize, y_max: usize, value: T)
+    fn v_line_unsafe(&mut self, x: u32, y_min: u32, y_max: u32, value: T)
     where
         T: Clone,
     {
@@ -212,7 +214,7 @@ mod tests {
 
     #[test]
     fn test_constructor() {
-        let expected_size = Vector2u::new(10, 10);
+        let expected_size = Vector2u32::new(10, 10);
         let map = Map::<i32>::new(expected_size);
 
         let size = map.get_size();
@@ -244,7 +246,7 @@ mod tests {
     #[test]
     fn test_set_success() {
         let mut map = Map::<i32>::new((10, 10).into());
-        let point = Vector2u::new(3, 3);
+        let point = Vector2u32::new(3, 3);
 
         let result = map.set(point, 42);
         let value = map.get(point).unwrap();
@@ -256,7 +258,7 @@ mod tests {
     #[test]
     fn test_set_failure() {
         let mut map = Map::<i32>::new((10, 10).into());
-        let point = Vector2u::new(10, 10);
+        let point = Vector2u32::new(10, 10);
 
         let result = map.set(point, 42);
 
