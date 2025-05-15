@@ -12,3 +12,5 @@ name = "regen"
 path = "src/lib.rs"
 
 [dependencies]
+clap = { version = "4.5.38", features = ["derive"] }
+image = "0.25.6"
