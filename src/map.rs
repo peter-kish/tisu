@@ -73,6 +73,33 @@ impl<T> Map<T> {
         Ok(())
     }
 
+    pub fn border_rect(&mut self, rect: Rect2u, value: T) -> Result<Option<Rect2u>, RegenError>
+    where
+        T: Copy,
+    {
+        if !Rect2u::new(Vector2u::default(), self.size)?.contains_rect(rect) {
+            return Err(RegenError::OutOfBounds);
+        }
+
+        let x_min = rect.get_position().x;
+        let x_max = rect.get_position().x + rect.get_size().x;
+        let y_min = rect.get_position().y;
+        let y_max = rect.get_position().y + rect.get_size().y;
+
+        self.h_line_unsafe(y_min, x_min, x_max, value);
+        self.h_line_unsafe(y_max - 1, x_min, x_max, value);
+        self.v_line_unsafe(x_min, y_min + 1, y_max - 1, value);
+        self.v_line_unsafe(x_max - 1, y_min + 1, y_max - 1, value);
+
+        let rect_size = Vector2u::new(x_max - x_min - 2, y_max - y_min - 2);
+        if rect_size.x > 0 && rect_size.y > 0 {
+            let rect_pos = Vector2u::new(x_min, y_min) + Vector2u::one();
+            Ok(Some(Rect2u::new(rect_pos, rect_size)?))
+        } else {
+            Ok(None)
+        }
+    }
+
     pub fn h_line(
         &mut self,
         y: usize,
@@ -101,7 +128,7 @@ impl<T> Map<T> {
         } else {
             let x_min = rect.get_position().x;
             let x_max = rect.get_position().x + rect.get_size().x;
-            self.h_line_unsafe(y, x_min, x_max, value);
+            self.h_line_unsafe(rect.get_position().y + y, x_min, x_max, value);
 
             Ok((
                 rect2_utils::get_rect_above(rect, y)?,
@@ -147,7 +174,7 @@ impl<T> Map<T> {
         } else {
             let y_min = rect.get_position().y;
             let y_max = rect.get_position().y + rect.get_size().y;
-            self.v_line_unsafe(x, y_min, y_max, value);
+            self.v_line_unsafe(rect.get_position().x + x, y_min, y_max, value);
 
             Ok((
                 rect2_utils::get_rect_left(rect, x)?,
@@ -169,8 +196,8 @@ impl<T> Map<T> {
     where
         T: Display,
     {
-        for x in 0..self.size.x {
-            for y in 0..self.size.y {
+        for y in 0..self.size.x {
+            for x in 0..self.size.y {
                 let idx = self.get_idx((x, y).into());
                 print!("{}", self.data.get(idx).unwrap());
             }
@@ -245,6 +272,27 @@ mod tests {
         for x in 0..10 {
             for y in 0..10 {
                 assert_eq!(map.get((x, y).into()).unwrap(), &42);
+            }
+        }
+    }
+
+    #[test]
+    fn test_border_rect_success() {
+        let mut map = Map::<i32>::new((10, 10).into());
+
+        let result = map.border_rect((0, 0, 3, 3).try_into().unwrap(), 42);
+        let expected_rect = Some((1, 1, 1, 1).try_into().unwrap());
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), expected_rect);
+        for x in 0..10 {
+            for y in 0..10 {
+                let actual = map.get((x, y).into()).unwrap();
+                if (0..3).contains(&x) && (0..3).contains(&y) && !(x == 1 && y == 1) {
+                    assert_eq!(actual, &42);
+                } else {
+                    assert_eq!(actual, &0);
+                }
             }
         }
     }
@@ -325,7 +373,7 @@ mod tests {
         assert_eq!(result.unwrap().1, expected_lower_rect);
         for x in 0..10 {
             for y in 0..10 {
-                if (1..4).contains(&x) && y == 1 {
+                if (1..4).contains(&x) && y == 2 {
                     assert_eq!(map.get((x, y).into()).unwrap(), &42);
                 } else {
                     assert_eq!(map.get((x, y).into()).unwrap(), &0);
@@ -394,7 +442,7 @@ mod tests {
         assert_eq!(result.unwrap().1, expected_right_rect);
         for x in 0..10 {
             for y in 0..10 {
-                if (1..4).contains(&y) && x == 1 {
+                if (1..4).contains(&y) && x == 2 {
                     assert_eq!(map.get((x, y).into()).unwrap(), &42);
                 } else {
                     assert_eq!(map.get((x, y).into()).unwrap(), &0);

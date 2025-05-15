@@ -10,9 +10,13 @@ mod vector2;
 fn main() {
     let mut map = Map::<char>::new(Vector2u::new(10, 10));
     map.fill('a');
-    map.h_line(1, 'b').expect("h_line failed");
-    map.v_line(1, 'c').expect("v_line failed");
-    map.fill_rect((8, 8, 2, 2).try_into().unwrap(), 'd')
-        .expect("fill_rect failed");
+    let r = map
+        .border_rect((0, 0, 10, 10).try_into().unwrap(), 'b')
+        .expect("border_rect failed")
+        .unwrap();
+    map.h_line_rect(r, 2, 'c').expect("h_line_rect failed");
+    let (r1, _) = map.v_line_rect(r, 2, 'd').expect("v_line_rect failed");
+    map.fill_rect(r1.unwrap(), 'e').expect("fill_rect failed");
+
     map.print();
 }
