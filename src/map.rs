@@ -43,6 +43,58 @@ impl<T> Map<T> {
         (point.y * self.size.x + point.x).try_into().unwrap()
     }
 
+    pub fn h_split_rect(
+        &self,
+        rect: Rect2u32,
+        height: u32,
+    ) -> Result<(Rect2u32, Rect2u32), RegenError> {
+        if height == 0 || height >= rect.get_size().y {
+            return Err(RegenError::InvalidArgument);
+        }
+        if rect.get_size().x < 2 {
+            return Err(RegenError::InvalidArgument);
+        }
+
+        let upper_rect_pos = rect.get_position();
+        let upper_rect_size = Vector2::new(rect.get_size().x, height);
+        let lower_rect_pos = Vector2::new(rect.get_position().x, rect.get_position().y + height);
+        let lower_rect_size = Vector2::new(rect.get_size().x, rect.get_size().y - height);
+        Ok((
+            Rect2u32::new(upper_rect_pos, upper_rect_size).unwrap(),
+            Rect2u32::new(lower_rect_pos, lower_rect_size).unwrap(),
+        ))
+    }
+
+    pub fn h_split(&self, height: u32) -> Result<(Rect2u32, Rect2u32), RegenError> {
+        self.h_split_rect((0, 0, self.size.x, self.size.y).try_into().unwrap(), height)
+    }
+
+    pub fn v_split_rect(
+        &self,
+        rect: Rect2u32,
+        width: u32,
+    ) -> Result<(Rect2u32, Rect2u32), RegenError> {
+        if width == 0 || width >= rect.get_size().x {
+            return Err(RegenError::InvalidArgument);
+        }
+        if rect.get_size().y < 2 {
+            return Err(RegenError::InvalidArgument);
+        }
+
+        let left_rect_pos = rect.get_position();
+        let left_rect_size = Vector2::new(width, rect.get_size().y);
+        let right_rect_pos = Vector2::new(rect.get_position().x + width, rect.get_position().y);
+        let right_rect_size = Vector2::new(rect.get_size().x - width, rect.get_size().y);
+        Ok((
+            Rect2u32::new(left_rect_pos, left_rect_size).unwrap(),
+            Rect2u32::new(right_rect_pos, right_rect_size).unwrap(),
+        ))
+    }
+
+    pub fn v_split(&self, width: u32) -> Result<(Rect2u32, Rect2u32), RegenError> {
+        self.v_split_rect((0, 0, self.size.x, self.size.y).try_into().unwrap(), width)
+    }
+
     pub fn fill(&mut self, value: T)
     where
         T: Clone,
@@ -263,6 +315,52 @@ mod tests {
         let result = map.set(point, 42);
 
         assert_eq!(result.err().unwrap(), RegenError::OutOfBounds);
+    }
+
+    #[test]
+    fn test_h_split_rect_success() {
+        let map = Map::<i32>::new((10, 10).into());
+        let rect = Rect2u32::new((1, 1).into(), (4, 4).into()).unwrap();
+
+        let result = map.h_split_rect(rect, 1);
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().0, (1, 1, 4, 1).try_into().unwrap());
+        assert_eq!(result.unwrap().1, (1, 2, 4, 3).try_into().unwrap());
+    }
+
+    #[test]
+    fn test_h_split_rect_failure() {
+        let map = Map::<i32>::new((10, 10).into());
+        let rect = Rect2u32::new((1, 1).into(), (4, 4).into()).unwrap();
+        let invalid_rect = Rect2u32::new((1, 1).into(), (1, 1).into()).unwrap();
+
+        assert!(map.h_split_rect(rect, 0).is_err());
+        assert!(map.h_split_rect(rect, 4).is_err());
+        assert!(map.h_split_rect(invalid_rect, 1).is_err());
+    }
+
+    #[test]
+    fn test_v_split_rect_success() {
+        let map = Map::<i32>::new((10, 10).into());
+        let rect = Rect2u32::new((1, 1).into(), (4, 4).into()).unwrap();
+
+        let result = map.v_split_rect(rect, 1);
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().0, (1, 1, 1, 4).try_into().unwrap());
+        assert_eq!(result.unwrap().1, (2, 1, 3, 4).try_into().unwrap());
+    }
+
+    #[test]
+    fn test_v_split_rect_failure() {
+        let map = Map::<i32>::new((10, 10).into());
+        let rect = Rect2u32::new((1, 1).into(), (4, 4).into()).unwrap();
+        let invalid_rect = Rect2u32::new((1, 1).into(), (1, 1).into()).unwrap();
+
+        assert!(map.v_split_rect(rect, 0).is_err());
+        assert!(map.v_split_rect(rect, 4).is_err());
+        assert!(map.v_split_rect(invalid_rect, 1).is_err());
     }
 
     #[test]
