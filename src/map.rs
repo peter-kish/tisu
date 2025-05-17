@@ -51,7 +51,7 @@ impl<T> Map<T> {
         if height == 0 || height >= rect.get_size().y {
             return Err(RegenError::InvalidArgument);
         }
-        if rect.get_size().x < 2 {
+        if rect.get_size().y < 2 {
             return Err(RegenError::InvalidArgument);
         }
 
@@ -77,7 +77,7 @@ impl<T> Map<T> {
         if width == 0 || width >= rect.get_size().x {
             return Err(RegenError::InvalidArgument);
         }
-        if rect.get_size().y < 2 {
+        if rect.get_size().x < 2 {
             return Err(RegenError::InvalidArgument);
         }
 
@@ -106,7 +106,7 @@ impl<T> Map<T> {
 
     pub fn fill_rect(&mut self, rect: Rect2u32, value: T) -> Result<(), RegenError>
     where
-        T: Copy,
+        T: Clone,
     {
         if !Rect2u32::new(Vector2u32::default(), self.size)?.contains_rect(rect) {
             return Err(RegenError::OutOfBounds);
@@ -119,7 +119,7 @@ impl<T> Map<T> {
 
         for x in x_min..x_max {
             for y in y_min..y_max {
-                self.set((x, y).into(), value)?;
+                self.set((x, y).into(), value.clone())?;
             }
         }
         Ok(())
@@ -127,7 +127,7 @@ impl<T> Map<T> {
 
     pub fn border_rect(&mut self, rect: Rect2u32, value: T) -> Result<Option<Rect2u32>, RegenError>
     where
-        T: Copy,
+        T: Clone,
     {
         if !Rect2u32::new(Vector2u32::default(), self.size)?.contains_rect(rect) {
             return Err(RegenError::OutOfBounds);
@@ -138,10 +138,10 @@ impl<T> Map<T> {
         let y_min = rect.get_position().y;
         let y_max = rect.get_position().y + rect.get_size().y;
 
-        self.h_line_unsafe(y_min, x_min, x_max, value);
-        self.h_line_unsafe(y_max - 1, x_min, x_max, value);
-        self.v_line_unsafe(x_min, y_min + 1, y_max - 1, value);
-        self.v_line_unsafe(x_max - 1, y_min + 1, y_max - 1, value);
+        self.h_line_unsafe(y_min, x_min, x_max, value.clone());
+        self.h_line_unsafe(y_max - 1, x_min, x_max, value.clone());
+        self.v_line_unsafe(x_min, y_min + 1, y_max - 1, value.clone());
+        self.v_line_unsafe(x_max - 1, y_min + 1, y_max - 1, value.clone());
 
         let rect_size = Vector2u32::new(x_max - x_min - 2, y_max - y_min - 2);
         if rect_size.x > 0 && rect_size.y > 0 {
@@ -257,6 +257,12 @@ impl<T> Map<T> {
             }
             println!();
         }
+    }
+}
+
+impl<T> From<&Map<T>> for Rect2u32 {
+    fn from(map: &Map<T>) -> Self {
+        Rect2u32::new(Vector2u32::default(), map.get_size()).unwrap()
     }
 }
 
