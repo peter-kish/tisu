@@ -1,7 +1,7 @@
 use map::Map;
 use rect2::Rect2u;
 use regen::regen_error::RegenError;
-use vector2::{Vector2, Vector2u};
+use vector2::Vector2u;
 
 mod map;
 mod rect2;
@@ -31,9 +31,11 @@ enum MapTile {
     Wall,
 }
 
+#[derive(Clone, Copy)]
 struct RoadConfiguration {
     wh: u32,
     margin: u32,
+    tile: MapTile,
 }
 
 impl RoadConfiguration {
@@ -64,6 +66,7 @@ fn v_split_rect_with_road(
     rect: Rect2u,
     road_width: u32,
     margin: u32,
+    road_tile: MapTile,
 ) -> Result<(Rect2u, Rect2u), RegenError> {
     if margin * 2 + road_width >= rect.get_size().x {
         return Err(RegenError::InvalidArgument);
@@ -71,7 +74,7 @@ fn v_split_rect_with_road(
     let road_start = rand::rng().random_range(margin..=rect.get_size().x - road_width - margin);
     let (left_rect, right_rect) = map.v_split_rect(rect, road_start).unwrap();
     let (road_rect, right_rect) = map.v_split_rect(right_rect, road_width).unwrap();
-    map.fill_rect(road_rect, MapTile::Asphalt).unwrap();
+    map.fill_rect(road_rect, road_tile).unwrap();
     Ok((left_rect, right_rect))
 }
 
@@ -80,6 +83,7 @@ fn h_split_rect_with_road(
     rect: Rect2u,
     road_height: u32,
     margin: u32,
+    road_tile: MapTile,
 ) -> Result<(Rect2u, Rect2u), RegenError> {
     if margin * 2 + road_height >= rect.get_size().y {
         return Err(RegenError::InvalidArgument);
@@ -87,18 +91,23 @@ fn h_split_rect_with_road(
     let road_start = rand::rng().random_range(margin..=rect.get_size().y - road_height - margin);
     let (left_rect, right_rect) = map.h_split_rect(rect, road_start).unwrap();
     let (road_rect, right_rect) = map.h_split_rect(right_rect, road_height).unwrap();
-    map.fill_rect(road_rect, MapTile::Asphalt).unwrap();
+    map.fill_rect(road_rect, road_tile).unwrap();
     Ok((left_rect, right_rect))
 }
 
-fn split_rect_with_road(map: &mut Map<MapTile>, rect: Rect2u) -> Option<(Rect2u, Rect2u)> {
-    if let Some(split) = get_road_split(rect) {
+fn split_rect_with_road(
+    map: &mut Map<MapTile>,
+    rect: Rect2u,
+    road_configurations: &Vec<RoadConfiguration>,
+) -> Option<(Rect2u, Rect2u)> {
+    if let Some(split) = get_road_split(rect, road_configurations) {
         if split.horizontal {
             h_split_rect_with_road(
                 map,
                 rect,
                 split.configuration.wh,
                 split.configuration.margin,
+                split.configuration.tile,
             )
             .ok()
         } else {
@@ -107,6 +116,7 @@ fn split_rect_with_road(map: &mut Map<MapTile>, rect: Rect2u) -> Option<(Rect2u,
                 rect,
                 split.configuration.wh,
                 split.configuration.margin,
+                split.configuration.tile,
             )
             .ok()
         }
@@ -115,12 +125,7 @@ fn split_rect_with_road(map: &mut Map<MapTile>, rect: Rect2u) -> Option<(Rect2u,
     }
 }
 
-fn get_road_split(rect: Rect2u) -> Option<RoadSplit> {
-    let road_configurations = [
-        RoadConfiguration { wh: 7, margin: 17 },
-        RoadConfiguration { wh: 5, margin: 10 },
-        RoadConfiguration { wh: 3, margin: 8 },
-    ];
+fn get_road_split(rect: Rect2u, road_configurations: &Vec<RoadConfiguration>) -> Option<RoadSplit> {
     let horizontal = rect.get_size().y > rect.get_size().x;
     let wh = if rect.get_size().y > rect.get_size().x {
         rect.get_size().y
@@ -131,7 +136,7 @@ fn get_road_split(rect: Rect2u) -> Option<RoadSplit> {
         if wh > configuration.get_min_size() {
             return Some(RoadSplit {
                 horizontal,
-                configuration,
+                configuration: *configuration,
             });
         }
     }
@@ -139,7 +144,25 @@ fn get_road_split(rect: Rect2u) -> Option<RoadSplit> {
 }
 
 fn generate_roads(map: &mut Map<MapTile>, rect: Rect2u) -> Vec<Rect2u> {
-    if let Some(rects) = split_rect_with_road(map, rect) {
+    let road_configurations = vec![
+        RoadConfiguration {
+            wh: 7,
+            margin: 17,
+            tile: MapTile::Asphalt,
+        },
+        RoadConfiguration {
+            wh: 5,
+            margin: 12,
+            tile: MapTile::Asphalt,
+        },
+        RoadConfiguration {
+            wh: 3,
+            margin: 8,
+            tile: MapTile::Asphalt,
+        },
+    ];
+
+    if let Some(rects) = split_rect_with_road(map, rect, &road_configurations) {
         let mut result1 = generate_roads(map, rects.0);
         let mut result2 = generate_roads(map, rects.1);
         result1.append(&mut result2);
@@ -150,12 +173,17 @@ fn generate_roads(map: &mut Map<MapTile>, rect: Rect2u) -> Vec<Rect2u> {
 }
 
 fn generate_park(map: &mut Map<MapTile>, rect: Rect2u) {
-    if let Ok(Some(park_inner)) = map.border_rect(rect, MapTile::Hedge) {
-        map.h_line_rect(rect, rect.get_size().y / 2, MapTile::Grass)
-            .unwrap();
-        map.v_line_rect(rect, rect.get_size().x / 2, MapTile::Grass)
-            .unwrap();
-        _ = map.fill_rect(park_inner, MapTile::Grass);
+    const MIN_HEDGE_SIZE: u32 = 7;
+    if rect.get_size().x >= MIN_HEDGE_SIZE && rect.get_size().y >= MIN_HEDGE_SIZE {
+        if let Ok(Some(park_inner)) = map.border_rect(rect, MapTile::Hedge) {
+            map.h_line_rect(rect, rect.get_size().y / 2, MapTile::Grass)
+                .unwrap();
+            map.v_line_rect(rect, rect.get_size().x / 2, MapTile::Grass)
+                .unwrap();
+            _ = map.fill_rect(park_inner, MapTile::Grass);
+        }
+    } else {
+        _ = map.fill_rect(rect, MapTile::Grass);
     }
 }
 
@@ -176,13 +204,13 @@ fn generate_building(map: &mut Map<MapTile>, rect: Rect2u) {
 }
 
 fn generate_block(map: &mut Map<MapTile>, rect: Rect2u) {
-    const MIN_BLOCK_SIZE: u32 = 4;
+    const MIN_BLOCK_SIZE: u32 = 5;
     if rect.get_size().x < MIN_BLOCK_SIZE || rect.get_size().y < MIN_BLOCK_SIZE {
-        map.fill(MapTile::Concrete);
+        _ = map.fill_rect(rect, MapTile::Concrete);
         return;
     }
 
-    let rand = random_range(0..5);
+    let rand = random_range(0..10);
     if rand == 0 {
         generate_park(map, rect)
     } else {
@@ -190,15 +218,32 @@ fn generate_block(map: &mut Map<MapTile>, rect: Rect2u) {
     }
 }
 
+fn generate_blocks(map: &mut Map<MapTile>, blocks: Vec<Rect2u>) {
+    for block in blocks {
+        if let Ok(Some(block_inner)) = map.border_rect(block, MapTile::Concrete) {
+            if let Some(rects) = split_rect_with_road(
+                map,
+                block_inner,
+                &vec![RoadConfiguration {
+                    wh: 1,
+                    margin: 4,
+                    tile: MapTile::Concrete,
+                }],
+            ) {
+                generate_block(map, rects.0);
+                generate_block(map, rects.1);
+            } else {
+                generate_block(map, block_inner);
+            }
+        }
+    }
+}
+
 fn generate_map() -> Map<MapTile> {
     let mut map = Map::<MapTile>::new(Vector2u::new(64, 64));
     let map_rect: Rect2u = (&map).into();
     let blocks = generate_roads(&mut map, map_rect);
-    for block in blocks {
-        if let Ok(Some(block_inner)) = map.border_rect(block, MapTile::Concrete) {
-            generate_block(&mut map, block_inner);
-        }
-    }
+    generate_blocks(&mut map, blocks);
 
     map
 }
