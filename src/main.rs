@@ -1,7 +1,7 @@
 use map::Map;
 use rect2::Rect2u;
 use regen::regen_error::RegenError;
-use vector2::Vector2u;
+use vector2::{Vector2, Vector2u};
 
 mod map;
 mod rect2;
@@ -10,8 +10,8 @@ mod regen_error;
 mod vector2;
 
 use clap::Parser;
-use image::{Rgb, RgbImage};
-use rand::Rng;
+use image::{imageops, Rgb, RgbImage};
+use rand::{random_range, Rng};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -117,9 +117,9 @@ fn split_rect_with_road(map: &mut Map<MapTile>, rect: Rect2u) -> Option<(Rect2u,
 
 fn get_road_split(rect: Rect2u) -> Option<RoadSplit> {
     let road_configurations = [
-        RoadConfiguration { wh: 7, margin: 7 },
-        RoadConfiguration { wh: 5, margin: 6 },
-        RoadConfiguration { wh: 3, margin: 5 },
+        RoadConfiguration { wh: 7, margin: 17 },
+        RoadConfiguration { wh: 5, margin: 10 },
+        RoadConfiguration { wh: 3, margin: 8 },
     ];
     let horizontal = rect.get_size().y > rect.get_size().x;
     let wh = if rect.get_size().y > rect.get_size().x {
@@ -138,17 +138,67 @@ fn get_road_split(rect: Rect2u) -> Option<RoadSplit> {
     None
 }
 
-fn generate_roads(map: &mut Map<MapTile>, rect: Rect2u) {
+fn generate_roads(map: &mut Map<MapTile>, rect: Rect2u) -> Vec<Rect2u> {
     if let Some(rects) = split_rect_with_road(map, rect) {
-        generate_roads(map, rects.0);
-        generate_roads(map, rects.1);
+        let mut result1 = generate_roads(map, rects.0);
+        let mut result2 = generate_roads(map, rects.1);
+        result1.append(&mut result2);
+        result1
+    } else {
+        vec![rect]
+    }
+}
+
+fn generate_park(map: &mut Map<MapTile>, rect: Rect2u) {
+    if let Ok(Some(park_inner)) = map.border_rect(rect, MapTile::Hedge) {
+        map.h_line_rect(rect, rect.get_size().y / 2, MapTile::Grass)
+            .unwrap();
+        map.v_line_rect(rect, rect.get_size().x / 2, MapTile::Grass)
+            .unwrap();
+        _ = map.fill_rect(park_inner, MapTile::Grass);
+    }
+}
+
+fn generate_building(map: &mut Map<MapTile>, rect: Rect2u) {
+    if let Ok(Some(building_inner)) = map.border_rect(rect, MapTile::Wall) {
+        map.set(
+            (
+                rect.get_position().x + random_range(1..rect.get_size().x - 1),
+                rect.get_position().y + rect.get_size().y - 1,
+            )
+                .into(),
+            MapTile::Concrete,
+        )
+        .unwrap();
+
+        _ = map.fill_rect(building_inner, MapTile::Concrete);
+    }
+}
+
+fn generate_block(map: &mut Map<MapTile>, rect: Rect2u) {
+    const MIN_BLOCK_SIZE: u32 = 4;
+    if rect.get_size().x < MIN_BLOCK_SIZE || rect.get_size().y < MIN_BLOCK_SIZE {
+        map.fill(MapTile::Concrete);
+        return;
+    }
+
+    let rand = random_range(0..5);
+    if rand == 0 {
+        generate_park(map, rect)
+    } else {
+        generate_building(map, rect)
     }
 }
 
 fn generate_map() -> Map<MapTile> {
     let mut map = Map::<MapTile>::new(Vector2u::new(64, 64));
     let map_rect: Rect2u = (&map).into();
-    generate_roads(&mut map, map_rect);
+    let blocks = generate_roads(&mut map, map_rect);
+    for block in blocks {
+        if let Ok(Some(block_inner)) = map.border_rect(block, MapTile::Concrete) {
+            generate_block(&mut map, block_inner);
+        }
+    }
 
     map
 }
@@ -160,7 +210,14 @@ fn draw_map(map: Map<MapTile>) -> RgbImage {
             image.put_pixel(x, y, map.get((x, y).into()).unwrap().into());
         }
     }
-    image
+
+    const ZOOM: u32 = 4;
+    imageops::resize(
+        &image,
+        image.width() * ZOOM,
+        image.height() * ZOOM,
+        imageops::FilterType::Nearest,
+    )
 }
 
 fn main() {
