@@ -1,16 +1,16 @@
-use crate::rect2::{Rect2, Rect2u32};
+use crate::rect2::{Rect2, Rect2u};
 use crate::rect2_utils;
 use crate::regen_error::RegenError;
-use crate::vector2::{Vector2, Vector2u32};
+use crate::vector2::{Vector2, Vector2u};
 use std::fmt::Display;
 
 pub struct Map<T> {
-    size: Vector2u32,
+    size: Vector2u,
     data: Vec<T>,
 }
 
 impl<T> Map<T> {
-    pub fn new(size: Vector2u32) -> Self
+    pub fn new(size: Vector2u) -> Self
     where
         T: Clone + Default,
     {
@@ -20,7 +20,7 @@ impl<T> Map<T> {
         }
     }
 
-    pub fn get_size(&self) -> Vector2u32 {
+    pub fn get_size(&self) -> Vector2u {
         self.size
     }
 
@@ -28,26 +28,22 @@ impl<T> Map<T> {
         &self.data
     }
 
-    pub fn get(&self, point: Vector2u32) -> Result<&T, RegenError> {
+    pub fn get(&self, point: Vector2u) -> Result<&T, RegenError> {
         let idx = self.get_idx(point);
         self.data.get(idx).ok_or(RegenError::OutOfBounds)
     }
 
-    pub fn set(&mut self, point: Vector2u32, value: T) -> Result<(), RegenError> {
+    pub fn set(&mut self, point: Vector2u, value: T) -> Result<(), RegenError> {
         let idx = self.get_idx(point);
         *(self.data.get_mut(idx).ok_or(RegenError::OutOfBounds)?) = value;
         Ok(())
     }
 
-    fn get_idx(&self, point: Vector2u32) -> usize {
+    fn get_idx(&self, point: Vector2u) -> usize {
         (point.y * self.size.x + point.x).try_into().unwrap()
     }
 
-    pub fn h_split_rect(
-        &self,
-        rect: Rect2u32,
-        height: u32,
-    ) -> Result<(Rect2u32, Rect2u32), RegenError> {
+    pub fn h_split_rect(&self, rect: Rect2u, height: u32) -> Result<(Rect2u, Rect2u), RegenError> {
         if height == 0 || height >= rect.get_size().y {
             return Err(RegenError::InvalidArgument);
         }
@@ -60,20 +56,16 @@ impl<T> Map<T> {
         let lower_rect_pos = Vector2::new(rect.get_position().x, rect.get_position().y + height);
         let lower_rect_size = Vector2::new(rect.get_size().x, rect.get_size().y - height);
         Ok((
-            Rect2u32::new(upper_rect_pos, upper_rect_size).unwrap(),
-            Rect2u32::new(lower_rect_pos, lower_rect_size).unwrap(),
+            Rect2u::new(upper_rect_pos, upper_rect_size).unwrap(),
+            Rect2u::new(lower_rect_pos, lower_rect_size).unwrap(),
         ))
     }
 
-    pub fn h_split(&self, height: u32) -> Result<(Rect2u32, Rect2u32), RegenError> {
+    pub fn h_split(&self, height: u32) -> Result<(Rect2u, Rect2u), RegenError> {
         self.h_split_rect((0, 0, self.size.x, self.size.y).try_into().unwrap(), height)
     }
 
-    pub fn v_split_rect(
-        &self,
-        rect: Rect2u32,
-        width: u32,
-    ) -> Result<(Rect2u32, Rect2u32), RegenError> {
+    pub fn v_split_rect(&self, rect: Rect2u, width: u32) -> Result<(Rect2u, Rect2u), RegenError> {
         if width == 0 || width >= rect.get_size().x {
             return Err(RegenError::InvalidArgument);
         }
@@ -86,12 +78,12 @@ impl<T> Map<T> {
         let right_rect_pos = Vector2::new(rect.get_position().x + width, rect.get_position().y);
         let right_rect_size = Vector2::new(rect.get_size().x - width, rect.get_size().y);
         Ok((
-            Rect2u32::new(left_rect_pos, left_rect_size).unwrap(),
-            Rect2u32::new(right_rect_pos, right_rect_size).unwrap(),
+            Rect2u::new(left_rect_pos, left_rect_size).unwrap(),
+            Rect2u::new(right_rect_pos, right_rect_size).unwrap(),
         ))
     }
 
-    pub fn v_split(&self, width: u32) -> Result<(Rect2u32, Rect2u32), RegenError> {
+    pub fn v_split(&self, width: u32) -> Result<(Rect2u, Rect2u), RegenError> {
         self.v_split_rect((0, 0, self.size.x, self.size.y).try_into().unwrap(), width)
     }
 
@@ -104,11 +96,11 @@ impl<T> Map<T> {
         }
     }
 
-    pub fn fill_rect(&mut self, rect: Rect2u32, value: T) -> Result<(), RegenError>
+    pub fn fill_rect(&mut self, rect: Rect2u, value: T) -> Result<(), RegenError>
     where
         T: Clone,
     {
-        if !Rect2u32::new(Vector2u32::default(), self.size)?.contains_rect(rect) {
+        if !Rect2u::new(Vector2u::default(), self.size)?.contains_rect(rect) {
             return Err(RegenError::OutOfBounds);
         }
 
@@ -125,11 +117,11 @@ impl<T> Map<T> {
         Ok(())
     }
 
-    pub fn border_rect(&mut self, rect: Rect2u32, value: T) -> Result<Option<Rect2u32>, RegenError>
+    pub fn border_rect(&mut self, rect: Rect2u, value: T) -> Result<Option<Rect2u>, RegenError>
     where
         T: Clone,
     {
-        if !Rect2u32::new(Vector2u32::default(), self.size)?.contains_rect(rect) {
+        if !Rect2u::new(Vector2u::default(), self.size)?.contains_rect(rect) {
             return Err(RegenError::OutOfBounds);
         }
 
@@ -143,10 +135,10 @@ impl<T> Map<T> {
         self.v_line_unsafe(x_min, y_min + 1, y_max - 1, value.clone());
         self.v_line_unsafe(x_max - 1, y_min + 1, y_max - 1, value.clone());
 
-        let rect_size = Vector2u32::new(x_max - x_min - 2, y_max - y_min - 2);
+        let rect_size = Vector2u::new(x_max - x_min - 2, y_max - y_min - 2);
         if rect_size.x > 0 && rect_size.y > 0 {
-            let rect_pos = Vector2u32::new(x_min, y_min) + Vector2u32::one();
-            Ok(Some(Rect2u32::new(rect_pos, rect_size)?))
+            let rect_pos = Vector2u::new(x_min, y_min) + Vector2u::one();
+            Ok(Some(Rect2u::new(rect_pos, rect_size)?))
         } else {
             Ok(None)
         }
@@ -156,7 +148,7 @@ impl<T> Map<T> {
         &mut self,
         y: u32,
         value: T,
-    ) -> Result<(Option<Rect2u32>, Option<Rect2u32>), RegenError>
+    ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
     where
         T: Clone,
     {
@@ -165,15 +157,14 @@ impl<T> Map<T> {
 
     pub fn h_line_rect(
         &mut self,
-        rect: Rect2u32,
+        rect: Rect2u,
         y: u32,
         value: T,
-    ) -> Result<(Option<Rect2u32>, Option<Rect2u32>), RegenError>
+    ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
     where
         T: Clone,
     {
-        let rect_out_of_bounds =
-            !Rect2u32::new(Vector2u32::default(), self.size)?.contains_rect(rect);
+        let rect_out_of_bounds = !Rect2u::new(Vector2u::default(), self.size)?.contains_rect(rect);
         let y_out_of_bounds = y >= rect.get_size().y;
 
         if rect_out_of_bounds || y_out_of_bounds {
@@ -203,7 +194,7 @@ impl<T> Map<T> {
         &mut self,
         x: u32,
         value: T,
-    ) -> Result<(Option<Rect2u32>, Option<Rect2u32>), RegenError>
+    ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
     where
         T: Clone,
     {
@@ -212,15 +203,14 @@ impl<T> Map<T> {
 
     pub fn v_line_rect(
         &mut self,
-        rect: Rect2u32,
+        rect: Rect2u,
         x: u32,
         value: T,
-    ) -> Result<(Option<Rect2u32>, Option<Rect2u32>), RegenError>
+    ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
     where
         T: Clone,
     {
-        let rect_out_of_bounds =
-            !Rect2u32::new(Vector2u32::default(), self.size)?.contains_rect(rect);
+        let rect_out_of_bounds = !Rect2u::new(Vector2u::default(), self.size)?.contains_rect(rect);
         let x_out_of_bounds = x >= rect.get_size().x;
 
         if rect_out_of_bounds || x_out_of_bounds {
@@ -260,9 +250,9 @@ impl<T> Map<T> {
     }
 }
 
-impl<T> From<&Map<T>> for Rect2u32 {
+impl<T> From<&Map<T>> for Rect2u {
     fn from(map: &Map<T>) -> Self {
-        Rect2u32::new(Vector2u32::default(), map.get_size()).unwrap()
+        Rect2u::new(Vector2u::default(), map.get_size()).unwrap()
     }
 }
 
@@ -272,7 +262,7 @@ mod tests {
 
     #[test]
     fn test_constructor() {
-        let expected_size = Vector2u32::new(10, 10);
+        let expected_size = Vector2u::new(10, 10);
         let map = Map::<i32>::new(expected_size);
 
         let size = map.get_size();
@@ -304,7 +294,7 @@ mod tests {
     #[test]
     fn test_set_success() {
         let mut map = Map::<i32>::new((10, 10).into());
-        let point = Vector2u32::new(3, 3);
+        let point = Vector2u::new(3, 3);
 
         let result = map.set(point, 42);
         let value = map.get(point).unwrap();
@@ -316,7 +306,7 @@ mod tests {
     #[test]
     fn test_set_failure() {
         let mut map = Map::<i32>::new((10, 10).into());
-        let point = Vector2u32::new(10, 10);
+        let point = Vector2u::new(10, 10);
 
         let result = map.set(point, 42);
 
@@ -326,7 +316,7 @@ mod tests {
     #[test]
     fn test_h_split_rect_success() {
         let map = Map::<i32>::new((10, 10).into());
-        let rect = Rect2u32::new((1, 1).into(), (4, 4).into()).unwrap();
+        let rect = Rect2u::new((1, 1).into(), (4, 4).into()).unwrap();
 
         let result = map.h_split_rect(rect, 1);
 
@@ -338,8 +328,8 @@ mod tests {
     #[test]
     fn test_h_split_rect_failure() {
         let map = Map::<i32>::new((10, 10).into());
-        let rect = Rect2u32::new((1, 1).into(), (4, 4).into()).unwrap();
-        let invalid_rect = Rect2u32::new((1, 1).into(), (1, 1).into()).unwrap();
+        let rect = Rect2u::new((1, 1).into(), (4, 4).into()).unwrap();
+        let invalid_rect = Rect2u::new((1, 1).into(), (1, 1).into()).unwrap();
 
         assert!(map.h_split_rect(rect, 0).is_err());
         assert!(map.h_split_rect(rect, 4).is_err());
@@ -349,7 +339,7 @@ mod tests {
     #[test]
     fn test_v_split_rect_success() {
         let map = Map::<i32>::new((10, 10).into());
-        let rect = Rect2u32::new((1, 1).into(), (4, 4).into()).unwrap();
+        let rect = Rect2u::new((1, 1).into(), (4, 4).into()).unwrap();
 
         let result = map.v_split_rect(rect, 1);
 
@@ -361,8 +351,8 @@ mod tests {
     #[test]
     fn test_v_split_rect_failure() {
         let map = Map::<i32>::new((10, 10).into());
-        let rect = Rect2u32::new((1, 1).into(), (4, 4).into()).unwrap();
-        let invalid_rect = Rect2u32::new((1, 1).into(), (1, 1).into()).unwrap();
+        let rect = Rect2u::new((1, 1).into(), (4, 4).into()).unwrap();
+        let invalid_rect = Rect2u::new((1, 1).into(), (1, 1).into()).unwrap();
 
         assert!(map.v_split_rect(rect, 0).is_err());
         assert!(map.v_split_rect(rect, 4).is_err());

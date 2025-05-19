@@ -8,7 +8,7 @@ pub struct Rect2<T> {
     size: Vector2<T>,
 }
 
-pub type Rect2u32 = Rect2<u32>;
+pub type Rect2u = Rect2<u32>;
 
 impl<T> Rect2<T> {
     pub fn new(position: Vector2<T>, size: Vector2<T>) -> Result<Self, RegenError>

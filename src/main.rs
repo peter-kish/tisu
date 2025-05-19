@@ -1,9 +1,7 @@
-use std::result;
-
 use map::Map;
-use rect2::Rect2u32;
+use rect2::Rect2u;
 use regen::regen_error::RegenError;
-use vector2::Vector2u32;
+use vector2::Vector2u;
 
 mod map;
 mod rect2;
@@ -63,10 +61,10 @@ impl From<&MapTile> for Rgb<u8> {
 
 fn v_split_rect_with_road(
     map: &mut Map<MapTile>,
-    rect: Rect2u32,
+    rect: Rect2u,
     road_width: u32,
     margin: u32,
-) -> Result<(Rect2u32, Rect2u32), RegenError> {
+) -> Result<(Rect2u, Rect2u), RegenError> {
     if margin * 2 + road_width >= rect.get_size().x {
         return Err(RegenError::InvalidArgument);
     }
@@ -79,10 +77,10 @@ fn v_split_rect_with_road(
 
 fn h_split_rect_with_road(
     map: &mut Map<MapTile>,
-    rect: Rect2u32,
+    rect: Rect2u,
     road_height: u32,
     margin: u32,
-) -> Result<(Rect2u32, Rect2u32), RegenError> {
+) -> Result<(Rect2u, Rect2u), RegenError> {
     if margin * 2 + road_height >= rect.get_size().y {
         return Err(RegenError::InvalidArgument);
     }
@@ -93,7 +91,7 @@ fn h_split_rect_with_road(
     Ok((left_rect, right_rect))
 }
 
-fn split_rect_with_road(map: &mut Map<MapTile>, rect: Rect2u32) -> Option<(Rect2u32, Rect2u32)> {
+fn split_rect_with_road(map: &mut Map<MapTile>, rect: Rect2u) -> Option<(Rect2u, Rect2u)> {
     if let Some(split) = get_road_split(rect) {
         if split.horizontal {
             h_split_rect_with_road(
@@ -117,7 +115,7 @@ fn split_rect_with_road(map: &mut Map<MapTile>, rect: Rect2u32) -> Option<(Rect2
     }
 }
 
-fn get_road_split(rect: Rect2u32) -> Option<RoadSplit> {
+fn get_road_split(rect: Rect2u) -> Option<RoadSplit> {
     let road_configurations = [
         RoadConfiguration { wh: 7, margin: 7 },
         RoadConfiguration { wh: 5, margin: 6 },
@@ -140,7 +138,7 @@ fn get_road_split(rect: Rect2u32) -> Option<RoadSplit> {
     None
 }
 
-fn generate_roads(map: &mut Map<MapTile>, rect: Rect2u32) {
+fn generate_roads(map: &mut Map<MapTile>, rect: Rect2u) {
     if let Some(rects) = split_rect_with_road(map, rect) {
         generate_roads(map, rects.0);
         generate_roads(map, rects.1);
@@ -148,8 +146,8 @@ fn generate_roads(map: &mut Map<MapTile>, rect: Rect2u32) {
 }
 
 fn generate_map() -> Map<MapTile> {
-    let mut map = Map::<MapTile>::new(Vector2u32::new(64, 64));
-    let map_rect: Rect2u32 = (&map).into();
+    let mut map = Map::<MapTile>::new(Vector2u::new(64, 64));
+    let map_rect: Rect2u = (&map).into();
     generate_roads(&mut map, map_rect);
 
     map
