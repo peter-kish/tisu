@@ -2,9 +2,7 @@ use crate::rect2::{Rect2, Rect2u};
 use crate::rect2_utils;
 use crate::regen_error::RegenError;
 use crate::vector2::{Vector2, Vector2u};
-use std::collections::HashMap;
 use std::fmt::Display;
-use std::hash::Hash;
 
 pub struct Map<T> {
     size: Vector2u,
@@ -271,8 +269,6 @@ impl<T> From<&Map<T>> for Rect2u {
 
 #[cfg(test)]
 mod tests {
-    use std::string;
-
     use super::*;
 
     #[test]
