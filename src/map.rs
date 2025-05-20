@@ -2,7 +2,9 @@ use crate::rect2::{Rect2, Rect2u};
 use crate::rect2_utils;
 use crate::regen_error::RegenError;
 use crate::vector2::{Vector2, Vector2u};
+use std::collections::HashMap;
 use std::fmt::Display;
+use std::hash::Hash;
 
 pub struct Map<T> {
     size: Vector2u,
@@ -236,6 +238,17 @@ impl<T> Map<T> {
         }
     }
 
+    fn map<G, F>(&self, mapper: F) -> Map<G>
+    where
+        G: Clone + Default,
+        F: Fn(&T) -> G,
+    {
+        Map {
+            size: self.size,
+            data: self.data.iter().map(mapper).collect(),
+        }
+    }
+
     pub fn print(&self)
     where
         T: Display,
@@ -258,6 +271,8 @@ impl<T> From<&Map<T>> for Rect2u {
 
 #[cfg(test)]
 mod tests {
+    use std::string;
+
     use super::*;
 
     #[test]
@@ -556,5 +571,21 @@ mod tests {
 
         assert_eq!(result1.err().unwrap(), RegenError::OutOfBounds);
         assert_eq!(result2.err().unwrap(), RegenError::OutOfBounds);
+    }
+
+    #[test]
+    fn test_map() {
+        let mut map = Map::<i32>::new((2, 2).into());
+        _ = map.set((0, 0).into(), 1);
+        _ = map.set((0, 1).into(), 2);
+        _ = map.set((1, 0).into(), 3);
+        _ = map.set((1, 1).into(), 4);
+
+        let map2 = map.map(|&x| x.to_string());
+
+        assert_eq!(map2.get((0, 0).into()).unwrap(), &"1".to_string());
+        assert_eq!(map2.get((0, 1).into()).unwrap(), &"2".to_string());
+        assert_eq!(map2.get((1, 0).into()).unwrap(), &"3".to_string());
+        assert_eq!(map2.get((1, 1).into()).unwrap(), &"4".to_string());
     }
 }
