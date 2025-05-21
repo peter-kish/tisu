@@ -52,8 +52,8 @@ impl<T> Map<T> {
         self.size
     }
 
-    pub fn get_data(&self) -> &Vec<T> {
-        &self.data
+    pub fn get_data(&self) -> &[T] {
+        self.data.as_slice()
     }
 
     pub fn get(&self, point: Vector2u) -> Result<&T, RegenError> {
