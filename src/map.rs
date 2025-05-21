@@ -58,14 +58,22 @@ impl<T> Map<T> {
     }
 
     pub fn get(&self, point: Vector2u) -> Result<&T, RegenError> {
-        let idx = self.get_idx(point);
-        self.data.get(idx).ok_or(RegenError::OutOfBounds)
+        if point.x >= self.get_size().x || point.y >= self.get_size().y {
+            Err(RegenError::OutOfBounds)
+        } else {
+            let idx = self.get_idx(point);
+            self.data.get(idx).ok_or(RegenError::OutOfBounds)
+        }
     }
 
     pub fn set(&mut self, point: Vector2u, value: T) -> Result<(), RegenError> {
-        let idx = self.get_idx(point);
-        *(self.data.get_mut(idx).ok_or(RegenError::OutOfBounds)?) = value;
-        Ok(())
+        if point.x >= self.get_size().x || point.y >= self.get_size().y {
+            Err(RegenError::OutOfBounds)
+        } else {
+            let idx = self.get_idx(point);
+            *(self.data.get_mut(idx).ok_or(RegenError::OutOfBounds)?) = value;
+            Ok(())
+        }
     }
 
     fn get_idx(&self, point: Vector2u) -> usize {
@@ -290,8 +298,8 @@ impl<T> Map<T> {
             for x in 0..=self.get_size().x - filter.get_pattern().get_size().x {
                 for y in 0..=self.get_size().y - filter.get_pattern().get_size().y {
                     let point = Vector2u::new(x, y);
-                    if filter.pattern_matches(self, point)? {
-                        filter.substitute(&mut result, point)?;
+                    if filter.pattern_matches(self, point) {
+                        filter.substitute(&mut result, point);
                     }
                 }
             }
