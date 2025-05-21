@@ -312,6 +312,13 @@ mod tests {
     }
 
     #[test]
+    fn test_with_data_failure() {
+        let result = Map::<i32>::with_data((2, 3).into(), [1, 2, 3, 4].into());
+
+        assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
+    }
+
+    #[test]
     fn test_get_success() {
         let map = Map::<i32>::new((10, 10).into());
 
