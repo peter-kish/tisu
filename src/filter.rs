@@ -101,16 +101,16 @@ mod tests {
         // 1 0 1
         // 1 1 1
         // 1 0 1
-        let map = Map::<u32>::with_data((3, 3).into(), [1, 0, 1, 1, 1, 1, 1, 0, 0].into()).unwrap();
+        let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
         // 1 0
-        let pattern = Map::<u32>::with_data((2, 1).into(), [1, 0].into()).unwrap();
+        let pattern = Map::<u32>::from_data([[1, 0]]).unwrap();
         // 0 1
-        let substitute = Map::<u32>::with_data((2, 1).into(), [0, 1].into()).unwrap();
+        let substitute = Map::<u32>::from_data([[0, 1]]).unwrap();
         let filter = Filter::new(pattern, substitute).unwrap();
         // 0 1 1
         // 1 1 1
         // 0 1 1
-        let expected_data = vec![0, 1, 1, 1, 1, 1, 0, 1, 0];
+        let expected_data = vec![0, 1, 1, 1, 1, 1, 0, 1, 1];
 
         let result = filter.apply(&map);
 
@@ -124,11 +124,11 @@ mod tests {
         // 1 0 1
         // 1 1 1
         // 1 0 1
-        let map = Map::<u32>::with_data((3, 3).into(), [1, 0, 1, 1, 1, 1, 1, 0, 0].into()).unwrap();
+        let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
         // 1 0 0 0
-        let pattern = Map::<u32>::with_data((4, 1).into(), [1, 0, 0, 0].into()).unwrap();
+        let pattern = Map::<u32>::from_data([[1, 0, 0, 0]]).unwrap();
         // 0 1 1 1
-        let substitute = Map::<u32>::with_data((4, 1).into(), [0, 1, 1, 1].into()).unwrap();
+        let substitute = Map::<u32>::from_data([[0, 1, 1, 1]]).unwrap();
         let filter = Filter::new(pattern, substitute).unwrap();
 
         let result = filter.apply(&map);

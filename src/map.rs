@@ -21,16 +21,30 @@ impl<T> Map<T> {
         }
     }
 
-    pub fn with_data(size: Vector2u, data: Vec<T>) -> Result<Self, RegenError> {
-        if size.x * size.y
-            != data
-                .len()
-                .try_into()
-                .map_err(|_| RegenError::InvalidArgument)?
-        {
+    pub fn from_data<const M: usize, const N: usize>(data: [[T; M]; N]) -> Result<Self, RegenError>
+    where
+        T: Clone,
+    {
+        if data.is_empty() {
             Err(RegenError::InvalidArgument)
         } else {
-            Ok(Self { size, data })
+            let map_width = data[0].len();
+            let map_height = data.len();
+            let mut total_data = vec![];
+            for d in data {
+                total_data.extend_from_slice(&d);
+            }
+            Ok(Self {
+                size: Vector2u::new(
+                    map_width
+                        .try_into()
+                        .map_err(|_| RegenError::InvalidArgument)?,
+                    map_height
+                        .try_into()
+                        .map_err(|_| RegenError::InvalidArgument)?,
+                ),
+                data: total_data,
+            })
         }
     }
 
@@ -301,19 +315,21 @@ mod tests {
     }
 
     #[test]
-    fn test_with_data_success() {
-        let expected_data = vec![1, 2, 3, 4];
-
-        let result = Map::<i32>::with_data((2, 2).into(), expected_data.clone());
+    fn test_from_data_success() {
+        let result = Map::<i32>::from_data([[1, 2], [3, 4]]);
 
         assert!(result.is_ok());
         let map = result.unwrap();
-        assert_eq!(map.get_data(), &expected_data);
+        assert_eq!(map.get_data(), &vec![1, 2, 3, 4]);
+        assert_eq!(map.get((0, 0).into()).unwrap(), &1);
+        assert_eq!(map.get((1, 0).into()).unwrap(), &2);
+        assert_eq!(map.get((0, 1).into()).unwrap(), &3);
+        assert_eq!(map.get((1, 1).into()).unwrap(), &4);
     }
 
     #[test]
-    fn test_with_data_failure() {
-        let result = Map::<i32>::with_data((2, 3).into(), [1, 2, 3, 4].into());
+    fn test_from_data_failure() {
+        let result = Map::<i32>::from_data::<0, 0>([]);
 
         assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
     }
