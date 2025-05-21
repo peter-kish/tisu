@@ -1,13 +1,7 @@
-use map::Map;
-use rect2::Rect2u;
+use regen::map::Map;
+use regen::rect2::Rect2u;
 use regen::regen_error::RegenError;
-use vector2::Vector2u;
-
-mod map;
-mod rect2;
-mod rect2_utils;
-mod regen_error;
-mod vector2;
+use regen::vector2::Vector2u;
 
 use clap::Parser;
 use image::{imageops, Rgb, RgbImage};
