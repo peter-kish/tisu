@@ -47,7 +47,7 @@ impl<T> Filter<T> {
         for x in 0..self.pattern.get_size().x {
             for y in 0..self.pattern.get_size().y {
                 let point = Vector2u::new(x, y);
-                if input.get(position + point)? != self.pattern.get(position)? {
+                if input.get(position + point)? != self.pattern.get(point)? {
                     return Ok(false);
                 }
             }
@@ -92,6 +92,46 @@ mod tests {
         let pattern = Map::<u32>::new((2, 2).into());
         let substitute = Map::<u32>::new((3, 2).into());
         let result = Filter::new(pattern.clone(), substitute.clone());
+
+        assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
+    }
+
+    #[test]
+    fn test_apply_success() {
+        // 1 0 1
+        // 1 1 1
+        // 1 0 1
+        let map = Map::<u32>::with_data((3, 3).into(), [1, 0, 1, 1, 1, 1, 1, 0, 0].into()).unwrap();
+        // 1 0
+        let pattern = Map::<u32>::with_data((2, 1).into(), [1, 0].into()).unwrap();
+        // 0 1
+        let substitute = Map::<u32>::with_data((2, 1).into(), [0, 1].into()).unwrap();
+        let filter = Filter::new(pattern, substitute).unwrap();
+        // 0 1 1
+        // 1 1 1
+        // 0 1 1
+        let expected_data = vec![0, 1, 1, 1, 1, 1, 0, 1, 0];
+
+        let result = filter.apply(&map);
+
+        assert!(result.is_ok());
+        let result_map = result.unwrap();
+        assert_eq!(result_map.get_data(), &expected_data);
+    }
+
+    #[test]
+    fn test_apply_failure() {
+        // 1 0 1
+        // 1 1 1
+        // 1 0 1
+        let map = Map::<u32>::with_data((3, 3).into(), [1, 0, 1, 1, 1, 1, 1, 0, 0].into()).unwrap();
+        // 1 0 0 0
+        let pattern = Map::<u32>::with_data((4, 1).into(), [1, 0, 0, 0].into()).unwrap();
+        // 0 1 1 1
+        let substitute = Map::<u32>::with_data((4, 1).into(), [0, 1, 1, 1].into()).unwrap();
+        let filter = Filter::new(pattern, substitute).unwrap();
+
+        let result = filter.apply(&map);
 
         assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
     }
