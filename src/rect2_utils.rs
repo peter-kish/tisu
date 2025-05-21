@@ -1,6 +1,6 @@
 use crate::{rect2::Rect2u, regen_error::RegenError, vector2::Vector2u};
 
-pub fn get_rect_above(rect: Rect2u, y: u32) -> Result<Option<Rect2u>, RegenError> {
+pub fn get_rect_above(rect: &Rect2u, y: u32) -> Result<Option<Rect2u>, RegenError> {
     if y > rect.get_size().y - 1 {
         Err(RegenError::OutOfBounds)
     } else if y > 0 {
@@ -11,7 +11,7 @@ pub fn get_rect_above(rect: Rect2u, y: u32) -> Result<Option<Rect2u>, RegenError
     }
 }
 
-pub fn get_rect_left(rect: Rect2u, x: u32) -> Result<Option<Rect2u>, RegenError> {
+pub fn get_rect_left(rect: &Rect2u, x: u32) -> Result<Option<Rect2u>, RegenError> {
     if x > rect.get_size().x - 1 {
         Err(RegenError::OutOfBounds)
     } else if x > 0 {
@@ -22,7 +22,7 @@ pub fn get_rect_left(rect: Rect2u, x: u32) -> Result<Option<Rect2u>, RegenError>
     }
 }
 
-pub fn get_rect_below(rect: Rect2u, y: u32) -> Result<Option<Rect2u>, RegenError> {
+pub fn get_rect_below(rect: &Rect2u, y: u32) -> Result<Option<Rect2u>, RegenError> {
     match y {
         _ if y > rect.get_size().y - 1 => Err(RegenError::OutOfBounds),
         _ if y < rect.get_size().y - 1 => {
@@ -34,7 +34,7 @@ pub fn get_rect_below(rect: Rect2u, y: u32) -> Result<Option<Rect2u>, RegenError
     }
 }
 
-pub fn get_rect_right(rect: Rect2u, x: u32) -> Result<Option<Rect2u>, RegenError> {
+pub fn get_rect_right(rect: &Rect2u, x: u32) -> Result<Option<Rect2u>, RegenError> {
     match x {
         _ if x > rect.get_size().x - 1 => Err(RegenError::OutOfBounds),
         _ if x < rect.get_size().x - 1 => {
@@ -56,9 +56,9 @@ mod tests {
     fn test_get_rect_above_success() {
         let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
-        let above_result = get_rect_above(rect, 1);
-        let above_upper_limit_result = get_rect_above(rect, 0);
-        let above_lower_limit_result = get_rect_above(rect, 2);
+        let above_result = get_rect_above(&rect, 1);
+        let above_upper_limit_result = get_rect_above(&rect, 0);
+        let above_lower_limit_result = get_rect_above(&rect, 2);
 
         assert!(above_result.is_ok());
         let above = above_result.unwrap();
@@ -79,9 +79,9 @@ mod tests {
     fn test_get_rect_above_failure() {
         let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
-        let above_invalid_result = get_rect_above(rect, 3);
+        let above_invalid_result = get_rect_above(&rect, 3);
         assert!(above_invalid_result.is_err());
-        let above_invalid_result = get_rect_above(rect, 30);
+        let above_invalid_result = get_rect_above(&rect, 30);
         assert!(above_invalid_result.is_err());
     }
 
@@ -89,9 +89,9 @@ mod tests {
     fn test_get_rect_left_success() {
         let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
-        let left_result = get_rect_left(rect, 1);
-        let left_of_left_limit_result = get_rect_left(rect, 0);
-        let left_of_right_limit_result = get_rect_left(rect, 2);
+        let left_result = get_rect_left(&rect, 1);
+        let left_of_left_limit_result = get_rect_left(&rect, 0);
+        let left_of_right_limit_result = get_rect_left(&rect, 2);
 
         assert!(left_result.is_ok());
         let left = left_result.unwrap();
@@ -115,9 +115,9 @@ mod tests {
     fn test_get_rect_left_failure() {
         let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
-        let left_of_invalid_result = get_rect_left(rect, 3);
+        let left_of_invalid_result = get_rect_left(&rect, 3);
         assert!(left_of_invalid_result.is_err());
-        let left_of_invalid_result = get_rect_left(rect, 30);
+        let left_of_invalid_result = get_rect_left(&rect, 30);
         assert!(left_of_invalid_result.is_err());
     }
 
@@ -125,9 +125,9 @@ mod tests {
     fn test_get_rect_below_success() {
         let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
-        let below_result = get_rect_below(rect, 1);
-        let below_upper_limit_result = get_rect_below(rect, 0);
-        let below_lower_limit_result = get_rect_below(rect, 2);
+        let below_result = get_rect_below(&rect, 1);
+        let below_upper_limit_result = get_rect_below(&rect, 0);
+        let below_lower_limit_result = get_rect_below(&rect, 2);
 
         assert!(below_result.is_ok());
         let below = below_result.unwrap();
@@ -148,9 +148,9 @@ mod tests {
     fn test_get_rect_below_failure() {
         let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
-        let below_invalid_result = get_rect_below(rect, 3);
+        let below_invalid_result = get_rect_below(&rect, 3);
         assert!(below_invalid_result.is_err());
-        let below_invalid_result = get_rect_below(rect, 30);
+        let below_invalid_result = get_rect_below(&rect, 30);
         assert!(below_invalid_result.is_err());
     }
 
@@ -158,9 +158,9 @@ mod tests {
     fn test_get_rect_right_success() {
         let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
-        let right_result = get_rect_right(rect, 1);
-        let right_of_upper_limit_result = get_rect_right(rect, 0);
-        let right_of_lower_limit_result = get_rect_right(rect, 2);
+        let right_result = get_rect_right(&rect, 1);
+        let right_of_upper_limit_result = get_rect_right(&rect, 0);
+        let right_of_lower_limit_result = get_rect_right(&rect, 2);
 
         assert!(right_result.is_ok());
         let right = right_result.unwrap();
@@ -184,9 +184,9 @@ mod tests {
     fn test_get_rect_right_failure() {
         let rect = Rect2u::new(Vector2::new(3, 3), Vector2::new(3, 3)).unwrap();
 
-        let right_of_invalid_result = get_rect_right(rect, 3);
+        let right_of_invalid_result = get_rect_right(&rect, 3);
         assert!(right_of_invalid_result.is_err());
-        let right_of_invalid_result = get_rect_right(rect, 30);
+        let right_of_invalid_result = get_rect_right(&rect, 30);
         assert!(right_of_invalid_result.is_err());
     }
 }

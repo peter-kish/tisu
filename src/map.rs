@@ -124,7 +124,7 @@ impl<T> Map<T> {
         }
     }
 
-    pub fn fill_rect(&mut self, rect: Rect2u, value: T) -> Result<(), RegenError>
+    pub fn fill_rect(&mut self, rect: &Rect2u, value: T) -> Result<(), RegenError>
     where
         T: Clone,
     {
@@ -145,7 +145,7 @@ impl<T> Map<T> {
         Ok(())
     }
 
-    pub fn border_rect(&mut self, rect: Rect2u, value: T) -> Result<Option<Rect2u>, RegenError>
+    pub fn border_rect(&mut self, rect: &Rect2u, value: T) -> Result<Option<Rect2u>, RegenError>
     where
         T: Clone,
     {
@@ -180,12 +180,12 @@ impl<T> Map<T> {
     where
         T: Clone,
     {
-        self.h_line_rect(Rect2::new(Vector2::default(), self.size)?, y, value)
+        self.h_line_rect(&Rect2::new(Vector2::default(), self.size)?, y, value)
     }
 
     pub fn h_line_rect(
         &mut self,
-        rect: Rect2u,
+        rect: &Rect2u,
         y: u32,
         value: T,
     ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
@@ -226,12 +226,12 @@ impl<T> Map<T> {
     where
         T: Clone,
     {
-        self.v_line_rect(Rect2::new(Vector2::default(), self.size)?, x, value)
+        self.v_line_rect(&Rect2::new(Vector2::default(), self.size)?, x, value)
     }
 
     pub fn v_line_rect(
         &mut self,
-        rect: Rect2u,
+        rect: &Rect2u,
         x: u32,
         value: T,
     ) -> Result<(Option<Rect2u>, Option<Rect2u>), RegenError>
@@ -438,7 +438,7 @@ mod tests {
     fn test_border_rect_success() {
         let mut map = Map::<i32>::new((10, 10).into());
 
-        let result = map.border_rect((0, 0, 3, 3).try_into().unwrap(), 42);
+        let result = map.border_rect(&(0, 0, 3, 3).try_into().unwrap(), 42);
         let expected_rect = Some((1, 1, 1, 1).try_into().unwrap());
 
         assert!(result.is_ok());
@@ -459,7 +459,7 @@ mod tests {
     fn test_fill_rect_success() {
         let mut map = Map::<i32>::new((10, 10).into());
 
-        let result = map.fill_rect((0, 0, 3, 3).try_into().unwrap(), 42);
+        let result = map.fill_rect(&(0, 0, 3, 3).try_into().unwrap(), 42);
 
         assert!(result.is_ok());
         for x in 0..10 {
@@ -477,7 +477,7 @@ mod tests {
     fn test_fill_rect_failure() {
         let mut map = Map::<i32>::new((10, 10).into());
 
-        let result = map.fill_rect((8, 8, 3, 3).try_into().unwrap(), 42);
+        let result = map.fill_rect(&(8, 8, 3, 3).try_into().unwrap(), 42);
 
         assert_eq!(result.err().unwrap(), RegenError::OutOfBounds);
     }
@@ -522,7 +522,7 @@ mod tests {
     fn test_h_line_rect_success() {
         let mut map = Map::<i32>::new((10, 10).into());
 
-        let result = map.h_line_rect((1, 1, 3, 3).try_into().unwrap(), 1, 42);
+        let result = map.h_line_rect(&(1, 1, 3, 3).try_into().unwrap(), 1, 42);
         let expected_upper_rect = Some((1, 1, 3, 1).try_into().unwrap());
         let expected_lower_rect = Some((1, 3, 3, 1).try_into().unwrap());
 
@@ -544,8 +544,8 @@ mod tests {
     fn test_h_line_rect_failure() {
         let mut map = Map::<i32>::new((10, 10).into());
 
-        let result1 = map.h_line_rect((1, 1, 10, 10).try_into().unwrap(), 1, 42);
-        let result2 = map.h_line_rect((1, 1, 3, 3).try_into().unwrap(), 3, 42);
+        let result1 = map.h_line_rect(&(1, 1, 10, 10).try_into().unwrap(), 1, 42);
+        let result2 = map.h_line_rect(&(1, 1, 3, 3).try_into().unwrap(), 3, 42);
 
         assert_eq!(result1.err().unwrap(), RegenError::OutOfBounds);
         assert_eq!(result2.err().unwrap(), RegenError::OutOfBounds);
@@ -591,7 +591,7 @@ mod tests {
     fn test_v_line_rect_success() {
         let mut map = Map::<i32>::new((10, 10).into());
 
-        let result = map.v_line_rect((1, 1, 3, 3).try_into().unwrap(), 1, 42);
+        let result = map.v_line_rect(&(1, 1, 3, 3).try_into().unwrap(), 1, 42);
         let expected_left_rect = Some((1, 1, 1, 3).try_into().unwrap());
         let expected_right_rect = Some((3, 1, 1, 3).try_into().unwrap());
 
@@ -613,8 +613,8 @@ mod tests {
     fn test_v_line_rect_failure() {
         let mut map = Map::<i32>::new((10, 10).into());
 
-        let result1 = map.v_line_rect((1, 1, 10, 10).try_into().unwrap(), 1, 42);
-        let result2 = map.v_line_rect((1, 1, 3, 3).try_into().unwrap(), 3, 42);
+        let result1 = map.v_line_rect(&(1, 1, 10, 10).try_into().unwrap(), 1, 42);
+        let result2 = map.v_line_rect(&(1, 1, 3, 3).try_into().unwrap(), 3, 42);
 
         assert_eq!(result1.err().unwrap(), RegenError::OutOfBounds);
         assert_eq!(result2.err().unwrap(), RegenError::OutOfBounds);

@@ -45,7 +45,7 @@ impl<T> Rect2<T> {
             && point.y < self.position.y + self.size.y
     }
 
-    pub fn contains_rect(&self, rect: Rect2<T>) -> bool
+    pub fn contains_rect(&self, rect: &Rect2<T>) -> bool
     where
         T: PartialOrd + Copy + Add<Output = T> + Sub<Output = T> + From<u16>,
     {
@@ -127,11 +127,11 @@ mod tests {
         let invalid_bottom_right_corner = Rect2::<i32>::try_from((8, 8, 4, 4)).unwrap();
         let enclosing = Rect2::<i32>::try_from((0, 0, 12, 12)).unwrap();
 
-        assert!(rect.contains_rect(top_left_corner));
-        assert!(rect.contains_rect(bottom_right_corner));
-        assert!(rect.contains_rect(rect));
-        assert!(!rect.contains_rect(invalid_top_left_corner));
-        assert!(!rect.contains_rect(invalid_bottom_right_corner));
-        assert!(!rect.contains_rect(enclosing));
+        assert!(rect.contains_rect(&top_left_corner));
+        assert!(rect.contains_rect(&bottom_right_corner));
+        assert!(rect.contains_rect(&rect));
+        assert!(!rect.contains_rect(&invalid_top_left_corner));
+        assert!(!rect.contains_rect(&invalid_bottom_right_corner));
+        assert!(!rect.contains_rect(&enclosing));
     }
 }
