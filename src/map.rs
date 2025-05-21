@@ -320,7 +320,7 @@ mod tests {
 
         assert!(result.is_ok());
         let map = result.unwrap();
-        assert_eq!(map.get_data(), &vec![1, 2, 3, 4]);
+        assert_eq!(map.get_data(), [1, 2, 3, 4]);
         assert_eq!(map.get((0, 0).into()).unwrap(), &1);
         assert_eq!(map.get((1, 0).into()).unwrap(), &2);
         assert_eq!(map.get((0, 1).into()).unwrap(), &3);

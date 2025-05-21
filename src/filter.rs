@@ -110,7 +110,7 @@ mod tests {
         // 0 1 1
         // 1 1 1
         // 0 1 1
-        let expected_data = vec![0, 1, 1, 1, 1, 1, 0, 1, 1];
+        let expected_data = [0, 1, 1, 1, 1, 1, 0, 1, 1];
 
         let result = filter.apply(&map);
 
