@@ -70,3 +70,29 @@ impl<T> Filter<T> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_constructor_success() {
+        let pattern = Map::<u32>::new((2, 2).into());
+        let substitute = Map::<u32>::new((2, 2).into());
+        let result = Filter::new(pattern.clone(), substitute.clone());
+
+        assert!(result.is_ok());
+        let filter = result.unwrap();
+        assert_eq!(filter.pattern, pattern);
+        assert_eq!(filter.substitute, substitute);
+    }
+
+    #[test]
+    fn test_constructor_failure() {
+        let pattern = Map::<u32>::new((2, 2).into());
+        let substitute = Map::<u32>::new((3, 2).into());
+        let result = Filter::new(pattern.clone(), substitute.clone());
+
+        assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
+    }
+}

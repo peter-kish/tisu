@@ -4,6 +4,7 @@ use crate::regen_error::RegenError;
 use crate::vector2::{Vector2, Vector2u};
 use std::fmt::Display;
 
+#[derive(PartialEq, Debug, Clone)]
 pub struct Map<T> {
     size: Vector2u,
     data: Vec<T>,
