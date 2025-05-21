@@ -21,6 +21,19 @@ impl<T> Map<T> {
         }
     }
 
+    pub fn with_data(size: Vector2u, data: Vec<T>) -> Result<Self, RegenError> {
+        if size.x * size.y
+            != data
+                .len()
+                .try_into()
+                .map_err(|_| RegenError::InvalidArgument)?
+        {
+            Err(RegenError::InvalidArgument)
+        } else {
+            Ok(Self { size, data })
+        }
+    }
+
     pub fn get_size(&self) -> Vector2u {
         self.size
     }
@@ -282,6 +295,20 @@ mod tests {
 
         assert_eq!(size, expected_size);
         assert_eq!(data_len, 100);
+        for field in map.get_data() {
+            assert_eq!(*field, 0);
+        }
+    }
+
+    #[test]
+    fn test_with_data_success() {
+        let expected_data = vec![1, 2, 3, 4];
+
+        let result = Map::<i32>::with_data((2, 2).into(), expected_data.clone());
+
+        assert!(result.is_ok());
+        let map = result.unwrap();
+        assert_eq!(map.get_data(), &expected_data);
     }
 
     #[test]
