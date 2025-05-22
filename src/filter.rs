@@ -3,16 +3,18 @@ use crate::{map::Map, regen_error::RegenError, vector2::Vector2u};
 pub struct Filter<T> {
     pattern: Map<T>,
     substitute: Map<T>,
+    wildcard: T,
 }
 
 impl<T> Filter<T> {
-    pub fn new(pattern: Map<T>, substitute: Map<T>) -> Result<Self, RegenError> {
+    pub fn new(pattern: Map<T>, substitute: Map<T>, wildcard: T) -> Result<Self, RegenError> {
         if pattern.get_size() != substitute.get_size() {
             Err(RegenError::InvalidArgument)
         } else {
             Ok(Self {
                 pattern,
                 substitute,
+                wildcard,
             })
         }
     }
@@ -34,7 +36,7 @@ impl<T> Filter<T> {
                 let point = Vector2u::new(x, y);
                 if let Ok(input_field) = input.get(position + point) {
                     if let Ok(pattern_field) = self.pattern.get(point) {
-                        if input_field != pattern_field {
+                        if !self.fields_match(input_field, pattern_field) {
                             return false;
                         }
                     }
@@ -47,17 +49,33 @@ impl<T> Filter<T> {
         true
     }
 
+    fn fields_match(&self, input_field: &T, pattern_field: &T) -> bool
+    where
+        T: PartialEq,
+    {
+        input_field == pattern_field || pattern_field == &self.wildcard
+    }
+
     pub fn substitute(&self, input: &mut Map<T>, position: Vector2u)
     where
-        T: Clone,
+        T: Clone + PartialEq,
     {
         for x in 0..self.pattern.get_size().x {
             for y in 0..self.pattern.get_size().y {
                 let point = Vector2u::new(x, y);
                 if let Ok(substitute_field) = self.substitute.get(point) {
-                    _ = input.set(position + point, substitute_field.clone());
+                    self.substitute_field(input, position + point, substitute_field);
                 }
             }
+        }
+    }
+
+    fn substitute_field(&self, input: &mut Map<T>, position: Vector2u, substitute_field: &T)
+    where
+        T: Clone + PartialEq,
+    {
+        if substitute_field != &self.wildcard {
+            _ = input.set(position, substitute_field.clone());
         }
     }
 }
@@ -70,7 +88,7 @@ mod tests {
     fn test_constructor_success() {
         let pattern = Map::<u32>::new((2, 2).into());
         let substitute = Map::<u32>::new((2, 2).into());
-        let result = Filter::new(pattern.clone(), substitute.clone());
+        let result = Filter::new(pattern.clone(), substitute.clone(), 42);
 
         assert!(result.is_ok());
         let filter = result.unwrap();
@@ -82,7 +100,7 @@ mod tests {
     fn test_constructor_failure() {
         let pattern = Map::<u32>::new((2, 2).into());
         let substitute = Map::<u32>::new((3, 2).into());
-        let result = Filter::new(pattern, substitute);
+        let result = Filter::new(pattern, substitute, 42);
 
         assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
     }
@@ -92,7 +110,7 @@ mod tests {
         let map = Map::<u32>::from_data([[1, 0], [0, 1]]).unwrap();
         let pattern = Map::<u32>::from_data([[1, 0]]).unwrap();
         let substitute = Map::<u32>::from_data([[1, 0]]).unwrap();
-        let filter = Filter::new(pattern, substitute).unwrap();
+        let filter = Filter::new(pattern, substitute, 42).unwrap();
 
         assert!(filter.pattern_matches(&map, (0, 0).into()));
         assert!(!filter.pattern_matches(&map, (0, 1).into()));
@@ -104,7 +122,7 @@ mod tests {
         let mut map = Map::<u32>::from_data([[1, 0], [0, 1]]).unwrap();
         let pattern = Map::<u32>::from_data([[1, 0]]).unwrap();
         let substitute = Map::<u32>::from_data([[1, 0]]).unwrap();
-        let filter = Filter::new(pattern, substitute).unwrap();
+        let filter = Filter::new(pattern, substitute, 42).unwrap();
 
         filter.substitute(&mut map, (0, 1).into());
         assert_eq!(map.get_data(), [1, 0, 1, 0]);

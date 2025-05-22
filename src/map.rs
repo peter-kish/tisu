@@ -678,7 +678,7 @@ mod tests {
         let pattern = Map::<u32>::from_data([[1, 0]]).unwrap();
         // 0 1
         let substitute = Map::<u32>::from_data([[0, 1]]).unwrap();
-        let filter = Filter::new(pattern, substitute).unwrap();
+        let filter = Filter::new(pattern, substitute, 42).unwrap();
         // 0 1 1
         // 1 1 1
         // 0 1 1
@@ -702,7 +702,7 @@ mod tests {
         let pattern = Map::<u32>::from_data([[1, 0, 0, 0]]).unwrap();
         // 0 1 1 1
         let substitute = Map::<u32>::from_data([[0, 1, 1, 1]]).unwrap();
-        let filter = Filter::new(pattern, substitute).unwrap();
+        let filter = Filter::new(pattern, substitute, 42).unwrap();
 
         let result = map.apply_filter(&filter);
 
