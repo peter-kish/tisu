@@ -118,6 +118,18 @@ mod tests {
     }
 
     #[test]
+    fn test_pattern_match_with_wildcard() {
+        let map = Map::<u32>::from_data([[1, 0], [1, 1]]).unwrap();
+        let pattern = Map::<u32>::from_data([[1, 2]]).unwrap();
+        let substitute = Map::<u32>::from_data([[1, 0]]).unwrap();
+        let filter = Filter::new(pattern, substitute, 2).unwrap();
+
+        assert!(filter.pattern_matches(&map, (0, 0).into()));
+        assert!(filter.pattern_matches(&map, (0, 1).into()));
+        assert!(!filter.pattern_matches(&map, (1, 1).into()));
+    }
+
+    #[test]
     fn test_substitute() {
         let mut map = Map::<u32>::from_data([[1, 0], [0, 1]]).unwrap();
         let pattern = Map::<u32>::from_data([[1, 0]]).unwrap();
@@ -129,5 +141,16 @@ mod tests {
 
         filter.substitute(&mut map, (1, 0).into());
         assert_eq!(map.get_data(), [1, 1, 1, 0]);
+    }
+
+    #[test]
+    fn test_substitute_with_wildcard() {
+        let mut map = Map::<u32>::from_data([[1, 0], [0, 1]]).unwrap();
+        let pattern = Map::<u32>::from_data([[1, 0]]).unwrap();
+        let substitute = Map::<u32>::from_data([[1, 2]]).unwrap();
+        let filter = Filter::new(pattern, substitute, 2).unwrap();
+
+        filter.substitute(&mut map, (0, 1).into());
+        assert_eq!(map.get_data(), [1, 0, 1, 1]);
     }
 }

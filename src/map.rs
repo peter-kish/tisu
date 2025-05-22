@@ -708,4 +708,52 @@ mod tests {
 
         assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
     }
+
+    #[test]
+    fn test_apply_filter_patter_with_wildcard() {
+        // 1 0 1
+        // 1 1 1
+        // 1 0 1
+        let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+        // 1 W 1
+        let pattern = Map::<u32>::from_data([[1, 2, 1]]).unwrap();
+        // 0 1 0
+        let substitute = Map::<u32>::from_data([[0, 1, 0]]).unwrap();
+        let filter = Filter::new(pattern, substitute, 2).unwrap();
+        // 0 1 0
+        // 0 1 0
+        // 0 1 0
+        let expected_data = [0, 1, 0, 0, 1, 0, 0, 1, 0];
+
+        let result = map.apply_filter(&filter);
+
+        assert!(result.is_ok());
+        let result_map = result.unwrap();
+        assert_eq!(result_map.get_data(), &expected_data);
+        assert_eq!(result_map.get_size(), map.get_size());
+    }
+
+    #[test]
+    fn test_apply_filter_substitute_with_wildcard() {
+        // 1 0 1
+        // 1 1 1
+        // 1 0 1
+        let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+        // 1 0 1
+        let pattern = Map::<u32>::from_data([[1, 0, 1]]).unwrap();
+        // W 1 W
+        let substitute = Map::<u32>::from_data([[2, 1, 2]]).unwrap();
+        let filter = Filter::new(pattern, substitute, 2).unwrap();
+        // 1 1 1
+        // 1 1 1
+        // 1 1 1
+        let expected_data = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+
+        let result = map.apply_filter(&filter);
+
+        assert!(result.is_ok());
+        let result_map = result.unwrap();
+        assert_eq!(result_map.get_data(), &expected_data);
+        assert_eq!(result_map.get_size(), map.get_size());
+    }
 }
