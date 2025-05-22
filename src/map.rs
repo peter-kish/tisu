@@ -307,6 +307,21 @@ impl<T> Map<T> {
         }
     }
 
+    pub fn apply_filters(&self, filters: &[Filter<T>]) -> Result<Map<T>, RegenError>
+    where
+        Self: Clone,
+        T: Clone + PartialEq,
+    {
+        let mut maybe_result: Option<Map<T>> = None;
+        for filter in filters {
+            maybe_result = match maybe_result {
+                Some(result) => Some(result.apply_filter(filter)?),
+                None => Some(self.apply_filter(filter)?),
+            };
+        }
+        maybe_result.ok_or(RegenError::InvalidArgument)
+    }
+
     pub fn print(&self)
     where
         T: Display,
@@ -755,5 +770,45 @@ mod tests {
         let result_map = result.unwrap();
         assert_eq!(result_map.get_data(), &expected_data);
         assert_eq!(result_map.get_size(), map.get_size());
+    }
+
+    #[test]
+    fn test_apply_filters_success() {
+        // 1 0 1
+        // 1 1 1
+        // 1 0 1
+        let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+        // 1 0
+        let pattern1 = Map::<u32>::from_data([[1, 0]]).unwrap();
+        // 0 1
+        let substitute1 = Map::<u32>::from_data([[0, 1]]).unwrap();
+        let filter1 = Filter::new(pattern1, substitute1, 42).unwrap();
+        // 0 1 1
+        let pattern2 = Map::<u32>::from_data([[0, 1, 1]]).unwrap();
+        // 0 0 0
+        let substitute2 = Map::<u32>::from_data([[0, 0, 0]]).unwrap();
+        let filter2 = Filter::new(pattern2, substitute2, 42).unwrap();
+        // 0 0 0
+        // 1 1 1
+        // 0 0 0
+        let expected_data = [0, 0, 0, 1, 1, 1, 0, 0, 0];
+
+        let result = map.apply_filters(&[filter1, filter2]);
+
+        assert!(result.is_ok());
+        let result_map = result.unwrap();
+        assert_eq!(result_map.get_data(), &expected_data);
+        assert_eq!(result_map.get_size(), map.get_size());
+    }
+
+    #[test]
+    fn test_apply_filters_failure() {
+        // 1 0 1
+        // 1 1 1
+        // 1 0 1
+        let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+        let result = map.apply_filters(&[]);
+
+        assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
     }
 }
