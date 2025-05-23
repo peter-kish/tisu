@@ -1,5 +1,6 @@
 use crate::{map::Map, regen_error::RegenError, vector2::Vector2u};
 
+#[derive(Clone)]
 pub struct Filter<T> {
     pattern: Map<T>,
     substitute: Map<T>,
@@ -78,6 +79,59 @@ impl<T> Filter<T> {
             _ = input.set(position, substitute_field.clone());
         }
     }
+
+    pub fn apply(&self, map: &Map<T>) -> Result<Map<T>, RegenError>
+    where
+        Map<T>: Clone,
+        T: Clone + PartialEq,
+    {
+        if map.get_size().x < self.get_pattern().get_size().x
+            || map.get_size().y < self.get_pattern().get_size().y
+        {
+            Err(RegenError::InvalidArgument)
+        } else {
+            let mut result = map.clone();
+            for x in 0..=map.get_size().x - self.get_pattern().get_size().x {
+                for y in 0..=map.get_size().y - self.get_pattern().get_size().y {
+                    let point = Vector2u::new(x, y);
+                    if self.pattern_matches(map, point) {
+                        self.substitute(&mut result, point);
+                    }
+                }
+            }
+            Ok(result)
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct FilterCollection<T> {
+    filters: Vec<Filter<T>>,
+}
+
+impl<T> FilterCollection<T> {
+    pub fn new(filters: &[Filter<T>]) -> Self
+    where
+        Filter<T>: Clone,
+    {
+        Self {
+            filters: filters.into(),
+        }
+    }
+
+    pub fn apply(&self, map: &Map<T>) -> Result<Map<T>, RegenError>
+    where
+        T: Clone + PartialEq,
+    {
+        let mut maybe_result: Option<Map<T>> = None;
+        for filter in &self.filters {
+            maybe_result = match maybe_result {
+                Some(result) => Some(filter.apply(&result)?),
+                None => Some(filter.apply(map)?),
+            };
+        }
+        maybe_result.ok_or(RegenError::InvalidArgument)
+    }
 }
 
 #[cfg(test)]
@@ -152,5 +206,136 @@ mod tests {
 
         filter.substitute(&mut map, (0, 1).into());
         assert_eq!(map.get_data(), [1, 0, 1, 1]);
+    }
+
+    #[test]
+    fn test_apply_filter_success() {
+        // 1 0 1
+        // 1 1 1
+        // 1 0 1
+        let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+        // 1 0
+        let pattern = Map::<u32>::from_data([[1, 0]]).unwrap();
+        // 0 1
+        let substitute = Map::<u32>::from_data([[0, 1]]).unwrap();
+        let filter = Filter::new(pattern, substitute, 42).unwrap();
+        // 0 1 1
+        // 1 1 1
+        // 0 1 1
+        let expected_data = [0, 1, 1, 1, 1, 1, 0, 1, 1];
+
+        let result = filter.apply(&map);
+
+        assert!(result.is_ok());
+        let result_map = result.unwrap();
+        assert_eq!(result_map.get_data(), &expected_data);
+        assert_eq!(result_map.get_size(), map.get_size());
+    }
+
+    #[test]
+    fn test_apply_filter_failure() {
+        // 1 0 1
+        // 1 1 1
+        // 1 0 1
+        let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+        // 1 0 0 0
+        let pattern = Map::<u32>::from_data([[1, 0, 0, 0]]).unwrap();
+        // 0 1 1 1
+        let substitute = Map::<u32>::from_data([[0, 1, 1, 1]]).unwrap();
+        let filter = Filter::new(pattern, substitute, 42).unwrap();
+
+        let result = filter.apply(&map);
+
+        assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
+    }
+
+    #[test]
+    fn test_apply_filter_patter_with_wildcard() {
+        // 1 0 1
+        // 1 1 1
+        // 1 0 1
+        let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+        // 1 W 1
+        let pattern = Map::<u32>::from_data([[1, 2, 1]]).unwrap();
+        // 0 1 0
+        let substitute = Map::<u32>::from_data([[0, 1, 0]]).unwrap();
+        let filter = Filter::new(pattern, substitute, 2).unwrap();
+        // 0 1 0
+        // 0 1 0
+        // 0 1 0
+        let expected_data = [0, 1, 0, 0, 1, 0, 0, 1, 0];
+
+        let result = filter.apply(&map);
+
+        assert!(result.is_ok());
+        let result_map = result.unwrap();
+        assert_eq!(result_map.get_data(), &expected_data);
+        assert_eq!(result_map.get_size(), map.get_size());
+    }
+
+    #[test]
+    fn test_apply_filter_substitute_with_wildcard() {
+        // 1 0 1
+        // 1 1 1
+        // 1 0 1
+        let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+        // 1 0 1
+        let pattern = Map::<u32>::from_data([[1, 0, 1]]).unwrap();
+        // W 1 W
+        let substitute = Map::<u32>::from_data([[2, 1, 2]]).unwrap();
+        let filter = Filter::new(pattern, substitute, 2).unwrap();
+        // 1 1 1
+        // 1 1 1
+        // 1 1 1
+        let expected_data = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+
+        let result = filter.apply(&map);
+
+        assert!(result.is_ok());
+        let result_map = result.unwrap();
+        assert_eq!(result_map.get_data(), &expected_data);
+        assert_eq!(result_map.get_size(), map.get_size());
+    }
+
+    #[test]
+    fn test_apply_filter_collection_success() {
+        // 1 0 1
+        // 1 1 1
+        // 1 0 1
+        let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+        // 1 0
+        let pattern1 = Map::<u32>::from_data([[1, 0]]).unwrap();
+        // 0 1
+        let substitute1 = Map::<u32>::from_data([[0, 1]]).unwrap();
+        let filter1 = Filter::new(pattern1, substitute1, 42).unwrap();
+        // 0 1 1
+        let pattern2 = Map::<u32>::from_data([[0, 1, 1]]).unwrap();
+        // 0 0 0
+        let substitute2 = Map::<u32>::from_data([[0, 0, 0]]).unwrap();
+        let filter2 = Filter::new(pattern2, substitute2, 42).unwrap();
+        let filter_collection = FilterCollection::new(&[filter1, filter2]);
+        // 0 0 0
+        // 1 1 1
+        // 0 0 0
+        let expected_data = [0, 0, 0, 1, 1, 1, 0, 0, 0];
+
+        let result = filter_collection.apply(&map);
+
+        assert!(result.is_ok());
+        let result_map = result.unwrap();
+        assert_eq!(result_map.get_data(), &expected_data);
+        assert_eq!(result_map.get_size(), map.get_size());
+    }
+
+    #[test]
+    fn test_apply_filter_collection_failure() {
+        // 1 0 1
+        // 1 1 1
+        // 1 0 1
+        let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+        let filter_collection = FilterCollection::new(&[]);
+        let result = filter_collection.apply(&map);
+
+        assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
     }
 }
