@@ -1,4 +1,42 @@
-use crate::{rect2::Rect2u, regen_error::RegenError, vector2::Vector2u};
+use crate::rect2::Rect2u;
+use crate::regen_error::RegenError;
+use crate::vector2::{Vector2, Vector2u};
+
+pub fn h_split_rect(rect: Rect2u, height: u32) -> Result<(Rect2u, Rect2u), RegenError> {
+    if height == 0 || height >= rect.get_size().y {
+        return Err(RegenError::InvalidArgument);
+    }
+    if rect.get_size().y < 2 {
+        return Err(RegenError::InvalidArgument);
+    }
+
+    let upper_rect_pos = rect.get_position();
+    let upper_rect_size = Vector2::new(rect.get_size().x, height);
+    let lower_rect_pos = Vector2::new(rect.get_position().x, rect.get_position().y + height);
+    let lower_rect_size = Vector2::new(rect.get_size().x, rect.get_size().y - height);
+    Ok((
+        Rect2u::new(upper_rect_pos, upper_rect_size).unwrap(),
+        Rect2u::new(lower_rect_pos, lower_rect_size).unwrap(),
+    ))
+}
+
+pub fn v_split_rect(rect: Rect2u, width: u32) -> Result<(Rect2u, Rect2u), RegenError> {
+    if width == 0 || width >= rect.get_size().x {
+        return Err(RegenError::InvalidArgument);
+    }
+    if rect.get_size().x < 2 {
+        return Err(RegenError::InvalidArgument);
+    }
+
+    let left_rect_pos = rect.get_position();
+    let left_rect_size = Vector2::new(width, rect.get_size().y);
+    let right_rect_pos = Vector2::new(rect.get_position().x + width, rect.get_position().y);
+    let right_rect_size = Vector2::new(rect.get_size().x - width, rect.get_size().y);
+    Ok((
+        Rect2u::new(left_rect_pos, left_rect_size).unwrap(),
+        Rect2u::new(right_rect_pos, right_rect_size).unwrap(),
+    ))
+}
 
 pub fn get_rect_above(rect: &Rect2u, y: u32) -> Result<Option<Rect2u>, RegenError> {
     if y > rect.get_size().y - 1 {
@@ -51,6 +89,28 @@ mod tests {
     use crate::vector2::Vector2;
 
     use super::*;
+
+    #[test]
+    fn test_h_split_rect_success() {
+        let rect = Rect2u::new((1, 1).into(), (4, 4).into()).unwrap();
+
+        let result = h_split_rect(rect, 1);
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().0, (1, 1, 4, 1).try_into().unwrap());
+        assert_eq!(result.unwrap().1, (1, 2, 4, 3).try_into().unwrap());
+    }
+
+    #[test]
+    fn test_v_split_rect_success() {
+        let rect = Rect2u::new((1, 1).into(), (4, 4).into()).unwrap();
+
+        let result = v_split_rect(rect, 1);
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().0, (1, 1, 1, 4).try_into().unwrap());
+        assert_eq!(result.unwrap().1, (2, 1, 3, 4).try_into().unwrap());
+    }
 
     #[test]
     fn test_get_rect_above_success() {

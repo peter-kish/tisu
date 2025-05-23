@@ -1,5 +1,7 @@
 use regen::map::Map;
+use regen::painter;
 use regen::rect2::Rect2u;
+use regen::rect2_utils;
 use regen::regen_error::RegenError;
 use regen::vector2::Vector2u;
 
@@ -66,9 +68,9 @@ fn v_split_rect_with_road(
         return Err(RegenError::InvalidArgument);
     }
     let road_start = rand::rng().random_range(margin..=rect.get_size().x - road_width - margin);
-    let (left_rect, right_rect) = map.v_split_rect(rect, road_start).unwrap();
-    let (road_rect, right_rect) = map.v_split_rect(right_rect, road_width).unwrap();
-    map.fill_rect(&road_rect, road_tile).unwrap();
+    let (left_rect, right_rect) = rect2_utils::v_split_rect(rect, road_start).unwrap();
+    let (road_rect, right_rect) = rect2_utils::v_split_rect(right_rect, road_width).unwrap();
+    painter::fill_rect(map, &road_rect, road_tile).unwrap();
     Ok((left_rect, right_rect))
 }
 
@@ -83,9 +85,9 @@ fn h_split_rect_with_road(
         return Err(RegenError::InvalidArgument);
     }
     let road_start = rand::rng().random_range(margin..=rect.get_size().y - road_height - margin);
-    let (left_rect, right_rect) = map.h_split_rect(rect, road_start).unwrap();
-    let (road_rect, right_rect) = map.h_split_rect(right_rect, road_height).unwrap();
-    map.fill_rect(&road_rect, road_tile).unwrap();
+    let (left_rect, right_rect) = rect2_utils::h_split_rect(rect, road_start).unwrap();
+    let (road_rect, right_rect) = rect2_utils::h_split_rect(right_rect, road_height).unwrap();
+    painter::fill_rect(map, &road_rect, road_tile).unwrap();
     Ok((left_rect, right_rect))
 }
 
@@ -169,20 +171,18 @@ fn generate_roads(map: &mut Map<MapTile>, rect: Rect2u) -> Vec<Rect2u> {
 fn generate_park(map: &mut Map<MapTile>, rect: Rect2u) {
     const MIN_HEDGE_SIZE: u32 = 7;
     if rect.get_size().x >= MIN_HEDGE_SIZE && rect.get_size().y >= MIN_HEDGE_SIZE {
-        if let Ok(Some(park_inner)) = map.border_rect(&rect, MapTile::Hedge) {
-            map.h_line_rect(&rect, rect.get_size().y / 2, MapTile::Grass)
-                .unwrap();
-            map.v_line_rect(&rect, rect.get_size().x / 2, MapTile::Grass)
-                .unwrap();
-            _ = map.fill_rect(&park_inner, MapTile::Grass);
+        if let Ok(Some(park_inner)) = painter::border_rect(map, &rect, MapTile::Hedge) {
+            painter::h_line_rect(map, &rect, rect.get_size().y / 2, MapTile::Grass).unwrap();
+            painter::v_line_rect(map, &rect, rect.get_size().x / 2, MapTile::Grass).unwrap();
+            _ = painter::fill_rect(map, &park_inner, MapTile::Grass);
         }
     } else {
-        _ = map.fill_rect(&rect, MapTile::Grass);
+        _ = painter::fill_rect(map, &rect, MapTile::Grass);
     }
 }
 
 fn generate_building(map: &mut Map<MapTile>, rect: Rect2u) {
-    if let Ok(Some(building_inner)) = map.border_rect(&rect, MapTile::Wall) {
+    if let Ok(Some(building_inner)) = painter::border_rect(map, &rect, MapTile::Wall) {
         map.set(
             (
                 rect.get_position().x + random_range(1..rect.get_size().x - 1),
@@ -193,14 +193,14 @@ fn generate_building(map: &mut Map<MapTile>, rect: Rect2u) {
         )
         .unwrap();
 
-        _ = map.fill_rect(&building_inner, MapTile::Concrete);
+        _ = painter::fill_rect(map, &building_inner, MapTile::Concrete);
     }
 }
 
 fn generate_block(map: &mut Map<MapTile>, rect: Rect2u) {
     const MIN_BLOCK_SIZE: u32 = 5;
     if rect.get_size().x < MIN_BLOCK_SIZE || rect.get_size().y < MIN_BLOCK_SIZE {
-        _ = map.fill_rect(&rect, MapTile::Concrete);
+        _ = painter::fill_rect(map, &rect, MapTile::Concrete);
         return;
     }
 
@@ -214,7 +214,7 @@ fn generate_block(map: &mut Map<MapTile>, rect: Rect2u) {
 
 fn generate_blocks(map: &mut Map<MapTile>, blocks: &[Rect2u]) {
     for block in blocks {
-        if let Ok(Some(block_inner)) = map.border_rect(block, MapTile::Concrete) {
+        if let Ok(Some(block_inner)) = painter::border_rect(map, block, MapTile::Concrete) {
             if let Some(rects) = split_rect_with_road(
                 map,
                 block_inner,
