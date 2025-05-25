@@ -93,6 +93,25 @@ impl<T> Map<T> {
         }
     }
 
+    pub fn extract_segment(&self, segment_rect: Rect2u) -> Result<Map<T>, RegenError>
+    where
+        T: Clone + Default,
+    {
+        let map_rect = Rect2u::from(self);
+        if map_rect.contains_rect(&segment_rect) {
+            let mut segment = Map::new(segment_rect.get_size());
+            for x in 0..segment.get_size().x {
+                for y in 0..segment.get_size().y {
+                    let value = self.get(map_rect.get_position() + (x, y).into())?;
+                    segment.set((x, y).into(), value.clone())?;
+                }
+            }
+            Ok(segment)
+        } else {
+            Err(RegenError::InvalidArgument)
+        }
+    }
+
     pub fn print(&self)
     where
         T: Display,
@@ -207,5 +226,34 @@ mod tests {
         assert_eq!(map2.get((0, 1).into()).unwrap(), &"2".to_string());
         assert_eq!(map2.get((1, 0).into()).unwrap(), &"3".to_string());
         assert_eq!(map2.get((1, 1).into()).unwrap(), &"4".to_string());
+    }
+
+    #[test]
+    fn test_extract_segment_success() {
+        // 0 1 0 1
+        // 1 0 1 0
+        // 0 1 0 1
+        // 1 0 1 0
+        let map = Map::<i32>::from_data([[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 1, 0]])
+            .unwrap();
+
+        let result = map.extract_segment((1, 1, 2, 2).try_into().unwrap());
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), Map::from_data([[0, 1], [1, 0]]).unwrap());
+    }
+
+    #[test]
+    fn test_extract_segment_failure() {
+        // 0 1 0 1
+        // 1 0 1 0
+        // 0 1 0 1
+        // 1 0 1 0
+        let map = Map::<i32>::from_data([[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 1, 0]])
+            .unwrap();
+
+        let result = map.extract_segment((3, 3, 2, 2).try_into().unwrap());
+
+        assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
     }
 }
