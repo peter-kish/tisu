@@ -102,7 +102,7 @@ impl<T> Map<T> {
             let mut segment = Map::new(segment_rect.get_size());
             for x in 0..segment.get_size().x {
                 for y in 0..segment.get_size().y {
-                    let value = self.get(map_rect.get_position() + (x, y).into())?;
+                    let value = self.get(segment_rect.get_position() + (x, y).into())?;
                     segment.set((x, y).into(), value.clone())?;
                 }
             }
