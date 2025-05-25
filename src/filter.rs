@@ -1,6 +1,10 @@
-use crate::{map::Map, regen_error::RegenError, vector2::Vector2u};
+use crate::map::Map;
+use crate::map_segmenter;
+use crate::regen_error::RegenError;
+use crate::tiled_map_loader::TiledMapLoader;
+use crate::vector2::Vector2u;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Filter<T> {
     pattern: Map<T>,
     substitute: Map<T>,
@@ -131,6 +135,35 @@ impl<T> FilterCollection<T> {
             };
         }
         maybe_result.ok_or(RegenError::InvalidArgument)
+    }
+
+    pub fn push(&mut self, filter: Filter<T>) {
+        self.filters.push(filter);
+    }
+}
+
+pub fn load_tiled(
+    file: &str,
+    wildcard: Option<u32>,
+) -> Result<FilterCollection<Option<u32>>, RegenError> {
+    let map = TiledMapLoader::load(file)?;
+    let segments = map_segmenter::extract_segments(&map, &None);
+    if segments.is_empty() || segments.len() % 2 > 0 {
+        Err(RegenError::InvalidArgument)
+    } else {
+        let mut idx = 0;
+        let mut filter_collection = FilterCollection::<Option<u32>>::default();
+        loop {
+            if idx >= segments.len() {
+                break;
+            }
+            let pattern = map.extract_segment(segments[idx])?;
+            let substitute = map.extract_segment(segments[idx + 1])?;
+            let filter = Filter::new(pattern, substitute, wildcard)?;
+            filter_collection.push(filter);
+            idx += 2;
+        }
+        Ok(filter_collection)
     }
 }
 
@@ -337,5 +370,52 @@ mod tests {
         let result = filter_collection.apply(&map);
 
         assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
+    }
+
+    #[test]
+    fn test_filter_collection_push() {
+        let mut fc = FilterCollection::<u32>::default();
+        // 1 0
+        let pattern = Map::<u32>::from_data([[1, 0]]).unwrap();
+        // 0 1
+        let substitute = Map::<u32>::from_data([[0, 1]]).unwrap();
+        let filter = Filter::new(pattern, substitute, 42).unwrap();
+
+        fc.push(filter.clone());
+
+        assert_eq!(fc.filters.len(), 1);
+        assert_eq!(fc.filters[0], filter);
+    }
+
+    #[test]
+    fn test_filter_collection_load_tiled_success() {
+        let fc = load_tiled(
+            format!(
+                "{}/{}",
+                env!("CARGO_MANIFEST_DIR"),
+                "data/filter_collection.tmx"
+            )
+            .as_str(),
+            Some(4),
+        );
+        let pattern = Map::<Option<u32>>::from_data([[Some(0), Some(1)]]).unwrap();
+        let substitute = Map::<Option<u32>>::from_data([[Some(1), Some(1)]]).unwrap();
+        let filter1 = Filter::new(pattern, substitute, Some(4)).unwrap();
+
+        let pattern =
+            Map::<Option<u32>>::from_data([[Some(2), Some(2)], [Some(2), Some(2)]]).unwrap();
+        let substitute =
+            Map::<Option<u32>>::from_data([[Some(2), Some(3)], [Some(2), Some(2)]]).unwrap();
+        let filter2 = Filter::new(pattern, substitute, Some(4)).unwrap();
+
+        let pattern = Map::<Option<u32>>::from_data([[Some(3), Some(4), Some(3)]]).unwrap();
+        let substitute = Map::<Option<u32>>::from_data([[Some(0), Some(0), Some(0)]]).unwrap();
+        let filter3 = Filter::new(pattern, substitute, Some(4)).unwrap();
+
+        assert!(fc.is_ok());
+        let filters = &fc.unwrap().filters;
+        assert_eq!(filters[0], filter1);
+        assert_eq!(filters[1], filter2);
+        assert_eq!(filters[2], filter3);
     }
 }
