@@ -142,7 +142,7 @@ impl<T> FilterCollection<T> {
     }
 }
 
-pub fn load_tiled(
+pub fn load_tiled_filters(
     file: &str,
     wildcard: Option<u32>,
 ) -> Result<FilterCollection<Option<u32>>, RegenError> {
@@ -403,7 +403,7 @@ mod tests {
         let substitute = Map::<Option<u32>>::from_data([[Some(0), Some(0), Some(0)]]).unwrap();
         let filter3 = Filter::new(pattern, substitute, Some(4)).unwrap();
 
-        let fc = load_tiled(
+        let fc = load_tiled_filters(
             format!(
                 "{}/{}",
                 env!("CARGO_MANIFEST_DIR"),

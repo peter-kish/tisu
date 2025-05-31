@@ -863,6 +863,7 @@ dependencies = [
  "image",
  "rand 0.9.1",
  "tiled",
+ "xml-rs",
 ]
 
 [[package]]

@@ -5,7 +5,11 @@ edition = "2021"
 
 [[bin]]
 name = "regen"
-path = "src/main.rs"
+path = "src/regen.rs"
+
+[[bin]]
+name = "refilter"
+path = "src/refilter.rs"
 
 [lib]
 name = "regen"
@@ -16,3 +20,4 @@ clap = { version = "4.5.38", features = ["derive"] }
 image = "0.25.6"
 rand = "0.9.1"
 tiled = "0.14.0"
+xml-rs = "0.8.26"
