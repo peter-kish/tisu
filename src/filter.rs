@@ -1,7 +1,7 @@
 use crate::map::Map;
 use crate::map_segmenter;
 use crate::regen_error::RegenError;
-use crate::tiled_map_loader::TiledMapLoader;
+use crate::tiled_map_converter::TiledMapConverter;
 use crate::vector2::Vector2u;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -146,7 +146,7 @@ pub fn load_tiled(
     file: &str,
     wildcard: Option<u32>,
 ) -> Result<FilterCollection<Option<u32>>, RegenError> {
-    let map = TiledMapLoader::load(file)?;
+    let map = TiledMapConverter::load(file)?;
     let segments = map_segmenter::extract_segments(&map, &None);
     if segments.is_empty() || segments.len() % 2 > 0 {
         Err(RegenError::InvalidArgument)
@@ -389,15 +389,6 @@ mod tests {
 
     #[test]
     fn test_filter_collection_load_tiled_success() {
-        let fc = load_tiled(
-            format!(
-                "{}/{}",
-                env!("CARGO_MANIFEST_DIR"),
-                "data/filter_collection.tmx"
-            )
-            .as_str(),
-            Some(4),
-        );
         let pattern = Map::<Option<u32>>::from_data([[Some(0), Some(1)]]).unwrap();
         let substitute = Map::<Option<u32>>::from_data([[Some(1), Some(1)]]).unwrap();
         let filter1 = Filter::new(pattern, substitute, Some(4)).unwrap();
@@ -411,6 +402,16 @@ mod tests {
         let pattern = Map::<Option<u32>>::from_data([[Some(3), Some(4), Some(3)]]).unwrap();
         let substitute = Map::<Option<u32>>::from_data([[Some(0), Some(0), Some(0)]]).unwrap();
         let filter3 = Filter::new(pattern, substitute, Some(4)).unwrap();
+
+        let fc = load_tiled(
+            format!(
+                "{}/{}",
+                env!("CARGO_MANIFEST_DIR"),
+                "data/filter_collection.tmx"
+            )
+            .as_str(),
+            Some(4),
+        );
 
         assert!(fc.is_ok());
         let filters = &fc.unwrap().filters;
