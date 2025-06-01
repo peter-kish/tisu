@@ -146,25 +146,27 @@ pub fn load_tiled_filters(
     file: &str,
     wildcard: Option<u32>,
 ) -> Result<FilterCollection<Option<u32>>, RegenError> {
-    let map = TiledMapConverter::load(file)?;
-    let segments = map_segmenter::extract_segments(&map, &None);
-    if segments.is_empty() || segments.len() % 2 > 0 {
-        Err(RegenError::InvalidArgument)
-    } else {
-        let mut idx = 0;
-        let mut filter_collection = FilterCollection::<Option<u32>>::default();
-        loop {
-            if idx >= segments.len() {
-                break;
+    let maps = TiledMapConverter::load(file)?;
+    let mut filter_collection = FilterCollection::<Option<u32>>::default();
+    for map in &maps {
+        let segments = map_segmenter::extract_segments(map, &None);
+        if segments.is_empty() || segments.len() % 2 > 0 {
+            return Err(RegenError::InvalidArgument);
+        } else {
+            let mut idx = 0;
+            loop {
+                if idx >= segments.len() {
+                    break;
+                }
+                let pattern = map.extract_segment(segments[idx])?;
+                let substitute = map.extract_segment(segments[idx + 1])?;
+                let filter = Filter::new(pattern, substitute, wildcard)?;
+                filter_collection.push(filter);
+                idx += 2;
             }
-            let pattern = map.extract_segment(segments[idx])?;
-            let substitute = map.extract_segment(segments[idx + 1])?;
-            let filter = Filter::new(pattern, substitute, wildcard)?;
-            filter_collection.push(filter);
-            idx += 2;
         }
-        Ok(filter_collection)
     }
+    Ok(filter_collection)
 }
 
 #[cfg(test)]
