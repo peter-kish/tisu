@@ -1,5 +1,6 @@
 use std::fs::File;
 
+use crate::filter::FilterProperties;
 use crate::map::Map;
 use crate::regen_error::RegenError;
 use crate::vector2::Vector2u;
@@ -10,14 +11,19 @@ use xml::EmitterConfig;
 
 pub struct TiledMapConverter {}
 
+pub struct TiledMapLayer {
+    pub map: Map<Option<u32>>,
+    pub properties: FilterProperties,
+}
+
 impl TiledMapConverter {
-    pub fn load(file: &str) -> Result<Vec<Map<Option<u32>>>, RegenError> {
+    pub fn load(file: &str) -> Result<Vec<TiledMapLayer>, RegenError> {
         let mut loader = Loader::new();
         let tmx_map = loader
             .load_tmx_map(file)
             .map_err(|_| RegenError::InvalidArgument)?;
 
-        let mut maps: Vec<Map<Option<u32>>> = vec![];
+        let mut layers: Vec<TiledMapLayer> = vec![];
         for layer in tmx_map.layers() {
             if let tiled::LayerType::Tiles(tiled::TileLayer::Finite(finite)) = layer.layer_type() {
                 let mut map = Map::<Option<u32>>::new((finite.width(), finite.height()).into());
@@ -30,10 +36,14 @@ impl TiledMapConverter {
                         }
                     }
                 }
-                maps.push(map);
+
+                layers.push(TiledMapLayer {
+                    map,
+                    properties: (&layer.properties).into(),
+                });
             }
         }
-        Ok(maps)
+        Ok(layers)
     }
 
     // TODO: Test
@@ -138,10 +148,10 @@ mod tests {
         );
 
         assert!(result.is_ok());
-        let maps = result.unwrap();
-        assert_eq!(maps.len(), 1);
-        assert_eq!(maps[0].get_size(), (3, 3).into());
-        assert_eq!(maps[0].get((0, 0).into()).unwrap(), &None);
-        assert_eq!(maps[0].get((1, 1).into()).unwrap(), &Some(3));
+        let layers = result.unwrap();
+        assert_eq!(layers.len(), 1);
+        assert_eq!(layers[0].map.get_size(), (3, 3).into());
+        assert_eq!(layers[0].map.get((0, 0).into()).unwrap(), &None);
+        assert_eq!(layers[0].map.get((1, 1).into()).unwrap(), &Some(3));
     }
 }

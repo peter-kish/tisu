@@ -1,3 +1,7 @@
+use rand::Rng;
+
+use tiled::{Properties, PropertyValue};
+
 use crate::map::Map;
 use crate::map_segmenter;
 use crate::regen_error::RegenError;
@@ -5,10 +9,35 @@ use crate::tiled_map_converter::TiledMapConverter;
 use crate::vector2::Vector2u;
 
 #[derive(Clone, PartialEq, Debug)]
+pub struct FilterProperties {
+    probability: f32,
+}
+
+impl From<&Properties> for FilterProperties {
+    fn from(value: &Properties) -> Self {
+        let probability = match value.get("probability") {
+            Some(PropertyValue::FloatValue(p)) => p,
+            _ => &1.0,
+        };
+
+        Self {
+            probability: *probability,
+        }
+    }
+}
+
+impl Default for FilterProperties {
+    fn default() -> Self {
+        Self { probability: 1.0 }
+    }
+}
+
+#[derive(Clone, PartialEq, Debug)]
 pub struct Filter<T> {
     pattern: Map<T>,
     substitute: Map<T>,
     wildcard: T,
+    properties: FilterProperties,
 }
 
 impl<T> Filter<T> {
@@ -20,6 +49,25 @@ impl<T> Filter<T> {
                 pattern,
                 substitute,
                 wildcard,
+                properties: FilterProperties::default(),
+            })
+        }
+    }
+
+    pub fn new_with_properties(
+        pattern: Map<T>,
+        substitute: Map<T>,
+        wildcard: T,
+        properties: FilterProperties,
+    ) -> Result<Self, RegenError> {
+        if pattern.get_size() != substitute.get_size() {
+            Err(RegenError::InvalidArgument)
+        } else {
+            Ok(Self {
+                pattern,
+                substitute,
+                wildcard,
+                properties,
             })
         }
     }
@@ -36,6 +84,9 @@ impl<T> Filter<T> {
     where
         T: PartialEq,
     {
+        if rand::rng().random_range(0.0..1.0) > self.properties.probability {
+            return false;
+        }
         for x in 0..self.pattern.get_size().x {
             for y in 0..self.pattern.get_size().y {
                 let point = Vector2u::new(x, y);
@@ -146,10 +197,10 @@ pub fn load_tiled_filters(
     file: &str,
     wildcard: Option<u32>,
 ) -> Result<FilterCollection<Option<u32>>, RegenError> {
-    let maps = TiledMapConverter::load(file)?;
+    let layers = TiledMapConverter::load(file)?;
     let mut filter_collection = FilterCollection::<Option<u32>>::default();
-    for map in &maps {
-        let segments = map_segmenter::extract_segments(map, &None);
+    for layer in &layers {
+        let segments = map_segmenter::extract_segments(&layer.map, &None);
         if segments.is_empty() || segments.len() % 2 > 0 {
             return Err(RegenError::InvalidArgument);
         } else {
@@ -158,9 +209,14 @@ pub fn load_tiled_filters(
                 if idx >= segments.len() {
                     break;
                 }
-                let pattern = map.extract_segment(segments[idx])?;
-                let substitute = map.extract_segment(segments[idx + 1])?;
-                let filter = Filter::new(pattern, substitute, wildcard)?;
+                let pattern = layer.map.extract_segment(segments[idx])?;
+                let substitute = layer.map.extract_segment(segments[idx + 1])?;
+                let filter = Filter::new_with_properties(
+                    pattern,
+                    substitute,
+                    wildcard,
+                    layer.properties.clone(),
+                )?;
                 filter_collection.push(filter);
                 idx += 2;
             }
