@@ -35,7 +35,7 @@ struct RoadConfiguration {
 }
 
 impl RoadConfiguration {
-    fn get_min_size(&self) -> u32 {
+    fn min_size(&self) -> u32 {
         self.wh + 2 * self.margin
     }
 }
@@ -64,10 +64,10 @@ fn v_split_rect_with_road(
     margin: u32,
     road_tile: MapTile,
 ) -> Result<(Rect2u, Rect2u), RegenError> {
-    if margin * 2 + road_width >= rect.get_size().x {
+    if margin * 2 + road_width >= rect.size().x {
         return Err(RegenError::InvalidArgument);
     }
-    let road_start = rand::rng().random_range(margin..=rect.get_size().x - road_width - margin);
+    let road_start = rand::rng().random_range(margin..=rect.size().x - road_width - margin);
     let (left_rect, right_rect) = rect2_utils::v_split_rect(rect, road_start).unwrap();
     let (road_rect, right_rect) = rect2_utils::v_split_rect(right_rect, road_width).unwrap();
     painter::fill_rect(map, &road_rect, road_tile).unwrap();
@@ -81,10 +81,10 @@ fn h_split_rect_with_road(
     margin: u32,
     road_tile: MapTile,
 ) -> Result<(Rect2u, Rect2u), RegenError> {
-    if margin * 2 + road_height >= rect.get_size().y {
+    if margin * 2 + road_height >= rect.size().y {
         return Err(RegenError::InvalidArgument);
     }
-    let road_start = rand::rng().random_range(margin..=rect.get_size().y - road_height - margin);
+    let road_start = rand::rng().random_range(margin..=rect.size().y - road_height - margin);
     let (left_rect, right_rect) = rect2_utils::h_split_rect(rect, road_start).unwrap();
     let (road_rect, right_rect) = rect2_utils::h_split_rect(right_rect, road_height).unwrap();
     painter::fill_rect(map, &road_rect, road_tile).unwrap();
@@ -122,14 +122,14 @@ fn split_rect_with_road(
 }
 
 fn get_road_split(rect: Rect2u, road_configurations: &[RoadConfiguration]) -> Option<RoadSplit> {
-    let horizontal = rect.get_size().y > rect.get_size().x;
-    let wh = if rect.get_size().y > rect.get_size().x {
-        rect.get_size().y
+    let horizontal = rect.size().y > rect.size().x;
+    let wh = if rect.size().y > rect.size().x {
+        rect.size().y
     } else {
-        rect.get_size().x
+        rect.size().x
     };
     for configuration in road_configurations {
-        if wh > configuration.get_min_size() {
+        if wh > configuration.min_size() {
             return Some(RoadSplit {
                 horizontal,
                 configuration: *configuration,
@@ -170,10 +170,10 @@ fn generate_roads(map: &mut Map<MapTile>, rect: Rect2u) -> Vec<Rect2u> {
 
 fn generate_park(map: &mut Map<MapTile>, rect: Rect2u) {
     const MIN_HEDGE_SIZE: u32 = 7;
-    if rect.get_size().x >= MIN_HEDGE_SIZE && rect.get_size().y >= MIN_HEDGE_SIZE {
+    if rect.size().x >= MIN_HEDGE_SIZE && rect.size().y >= MIN_HEDGE_SIZE {
         if let Ok(Some(park_inner)) = painter::border_rect(map, &rect, MapTile::Hedge) {
-            painter::h_line_rect(map, &rect, rect.get_size().y / 2, MapTile::Grass).unwrap();
-            painter::v_line_rect(map, &rect, rect.get_size().x / 2, MapTile::Grass).unwrap();
+            painter::h_line_rect(map, &rect, rect.size().y / 2, MapTile::Grass).unwrap();
+            painter::v_line_rect(map, &rect, rect.size().x / 2, MapTile::Grass).unwrap();
             _ = painter::fill_rect(map, &park_inner, MapTile::Grass);
         }
     } else {
@@ -185,8 +185,8 @@ fn generate_building(map: &mut Map<MapTile>, rect: Rect2u) {
     if let Ok(Some(building_inner)) = painter::border_rect(map, &rect, MapTile::Wall) {
         map.set(
             (
-                rect.get_position().x + random_range(1..rect.get_size().x - 1),
-                rect.get_position().y + rect.get_size().y - 1,
+                rect.position().x + random_range(1..rect.size().x - 1),
+                rect.position().y + rect.size().y - 1,
             )
                 .into(),
             MapTile::Concrete,
@@ -199,7 +199,7 @@ fn generate_building(map: &mut Map<MapTile>, rect: Rect2u) {
 
 fn generate_block(map: &mut Map<MapTile>, rect: Rect2u) {
     const MIN_BLOCK_SIZE: u32 = 5;
-    if rect.get_size().x < MIN_BLOCK_SIZE || rect.get_size().y < MIN_BLOCK_SIZE {
+    if rect.size().x < MIN_BLOCK_SIZE || rect.size().y < MIN_BLOCK_SIZE {
         _ = painter::fill_rect(map, &rect, MapTile::Concrete);
         return;
     }
@@ -243,9 +243,9 @@ fn generate_map() -> Map<MapTile> {
 }
 
 fn draw_map(map: Map<MapTile>) -> RgbImage {
-    let mut image = RgbImage::new(map.get_size().x, map.get_size().y);
-    for x in 0..map.get_size().x {
-        for y in 0..map.get_size().y {
+    let mut image = RgbImage::new(map.size().x, map.size().y);
+    for x in 0..map.size().x {
+        for y in 0..map.size().y {
             image.put_pixel(x, y, map.get((x, y).into()).unwrap().into());
         }
     }

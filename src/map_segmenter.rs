@@ -54,8 +54,8 @@ where
     T: PartialEq,
 {
     let mut it = from;
-    while it.y < map.get_size().y {
-        while it.x < map.get_size().x {
+    while it.y < map.size().y {
+        while it.x < map.size().x {
             if is_rect_start(map, transparent_value, it) {
                 return Ok(it);
             }
@@ -77,13 +77,13 @@ where
     } else {
         let mut size = Vector2u::default();
 
-        for x in field.x..map.get_size().x {
+        for x in field.x..map.size().x {
             if is_field_transparent(map, transparent_value, (x, field.y).into()) {
                 size.x = x - field.x;
                 break;
             }
         }
-        for y in field.y..map.get_size().y {
+        for y in field.y..map.size().y {
             if is_field_transparent(map, transparent_value, (field.x, y).into()) {
                 size.y = y - field.y;
                 break;

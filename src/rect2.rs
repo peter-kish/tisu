@@ -21,14 +21,14 @@ impl<T> Rect2<T> {
         Ok(Self { position, size })
     }
 
-    pub fn get_position(&self) -> Vector2<T>
+    pub fn position(&self) -> Vector2<T>
     where
         T: Copy,
     {
         self.position
     }
 
-    pub fn get_size(&self) -> Vector2<T>
+    pub fn size(&self) -> Vector2<T>
     where
         T: Copy,
     {
@@ -79,8 +79,8 @@ mod tests {
         let result = Rect2::<i32>::new(expected_position, expected_size);
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().get_position(), expected_position);
-        assert_eq!(result.unwrap().get_size(), expected_size);
+        assert_eq!(result.unwrap().position(), expected_position);
+        assert_eq!(result.unwrap().size(), expected_size);
     }
 
     #[test]
@@ -98,8 +98,8 @@ mod tests {
         let result = Rect2::<i32>::try_from((1, 2, 3, 4));
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().get_position(), (1, 2).into());
-        assert_eq!(result.unwrap().get_size(), (3, 4).into());
+        assert_eq!(result.unwrap().position(), (1, 2).into());
+        assert_eq!(result.unwrap().size(), (3, 4).into());
     }
 
     #[test]

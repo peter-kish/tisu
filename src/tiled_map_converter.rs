@@ -154,8 +154,8 @@ impl TiledMapConverter {
             .write(event)
             .expect("Failed to write XML document header");
 
-        let map_width_str = map.get_size().x.to_string();
-        let map_height_str = map.get_size().y.to_string();
+        let map_width_str = map.size().x.to_string();
+        let map_height_str = map.size().y.to_string();
         let tile_width_str = tile_size.x.to_string();
         let tile_height_str = tile_size.y.to_string();
         let event = XmlEvent::start_element("map")
@@ -197,7 +197,7 @@ impl TiledMapConverter {
         writer.write(event).expect("Failed to start 'data' element");
 
         let data: Vec<String> = map
-            .get_data()
+            .data()
             .iter()
             .map(|input: &Option<u32>| {
                 match input {
@@ -237,7 +237,7 @@ mod tests {
         assert!(result.is_ok());
         let load_result = result.unwrap();
         assert_eq!(load_result.map_layers.len(), 1);
-        assert_eq!(load_result.map_layers[0].map.get_size(), (3, 3).into());
+        assert_eq!(load_result.map_layers[0].map.size(), (3, 3).into());
         assert_eq!(
             load_result.map_layers[0].map.get((0, 0).into()).unwrap(),
             &None

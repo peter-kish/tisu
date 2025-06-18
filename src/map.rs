@@ -47,38 +47,38 @@ impl<T> Map<T> {
         }
     }
 
-    pub fn get_size(&self) -> Vector2u {
+    pub fn size(&self) -> Vector2u {
         self.size
     }
 
-    pub fn get_data(&self) -> &[T] {
+    pub fn data(&self) -> &[T] {
         self.data.as_slice()
     }
 
-    pub fn get_mut_data(&mut self) -> &mut [T] {
+    pub fn mut_data(&mut self) -> &mut [T] {
         self.data.as_mut_slice()
     }
 
     pub fn get(&self, point: Vector2u) -> Result<&T, RegenError> {
-        if point.x >= self.get_size().x || point.y >= self.get_size().y {
+        if point.x >= self.size().x || point.y >= self.size().y {
             Err(RegenError::OutOfBounds)
         } else {
-            let idx = self.get_idx(point);
+            let idx = self.idx(point);
             self.data.get(idx).ok_or(RegenError::OutOfBounds)
         }
     }
 
     pub fn set(&mut self, point: Vector2u, value: T) -> Result<(), RegenError> {
-        if point.x >= self.get_size().x || point.y >= self.get_size().y {
+        if point.x >= self.size().x || point.y >= self.size().y {
             Err(RegenError::OutOfBounds)
         } else {
-            let idx = self.get_idx(point);
+            let idx = self.idx(point);
             *(self.data.get_mut(idx).ok_or(RegenError::OutOfBounds)?) = value;
             Ok(())
         }
     }
 
-    fn get_idx(&self, point: Vector2u) -> usize {
+    fn idx(&self, point: Vector2u) -> usize {
         (point.y * self.size.x + point.x).try_into().unwrap()
     }
 
@@ -99,10 +99,10 @@ impl<T> Map<T> {
     {
         let map_rect = Rect2u::from(self);
         if map_rect.contains_rect(&segment_rect) {
-            let mut segment = Map::new(segment_rect.get_size());
-            for x in 0..segment.get_size().x {
-                for y in 0..segment.get_size().y {
-                    let value = self.get(segment_rect.get_position() + (x, y).into())?;
+            let mut segment = Map::new(segment_rect.size());
+            for x in 0..segment.size().x {
+                for y in 0..segment.size().y {
+                    let value = self.get(segment_rect.position() + (x, y).into())?;
                     segment.set((x, y).into(), value.clone())?;
                 }
             }
@@ -118,7 +118,7 @@ impl<T> Map<T> {
     {
         for y in 0..self.size.x {
             for x in 0..self.size.y {
-                let idx = self.get_idx((x, y).into());
+                let idx = self.idx((x, y).into());
                 print!("{}", self.data.get(idx).unwrap());
             }
             println!();
@@ -128,7 +128,7 @@ impl<T> Map<T> {
 
 impl<T> From<&Map<T>> for Rect2u {
     fn from(map: &Map<T>) -> Self {
-        Rect2u::new(Vector2u::default(), map.get_size()).unwrap()
+        Rect2u::new(Vector2u::default(), map.size()).unwrap()
     }
 }
 
@@ -141,12 +141,12 @@ mod tests {
         let expected_size = Vector2u::new(10, 10);
         let map = Map::<i32>::new(expected_size);
 
-        let size = map.get_size();
-        let data_len = map.get_data().len();
+        let size = map.size();
+        let data_len = map.data().len();
 
         assert_eq!(size, expected_size);
         assert_eq!(data_len, 100);
-        for field in map.get_data() {
+        for field in map.data() {
             assert_eq!(*field, 0);
         }
     }
@@ -157,7 +157,7 @@ mod tests {
 
         assert!(result.is_ok());
         let map = result.unwrap();
-        assert_eq!(map.get_data(), [1, 2, 3, 4]);
+        assert_eq!(map.data(), [1, 2, 3, 4]);
         assert_eq!(map.get((0, 0).into()).unwrap(), &1);
         assert_eq!(map.get((1, 0).into()).unwrap(), &2);
         assert_eq!(map.get((0, 1).into()).unwrap(), &3);

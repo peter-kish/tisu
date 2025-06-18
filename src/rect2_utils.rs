@@ -3,17 +3,17 @@ use crate::regen_error::RegenError;
 use crate::vector2::{Vector2, Vector2u};
 
 pub fn h_split_rect(rect: Rect2u, height: u32) -> Result<(Rect2u, Rect2u), RegenError> {
-    if height == 0 || height >= rect.get_size().y {
+    if height == 0 || height >= rect.size().y {
         return Err(RegenError::InvalidArgument);
     }
-    if rect.get_size().y < 2 {
+    if rect.size().y < 2 {
         return Err(RegenError::InvalidArgument);
     }
 
-    let upper_rect_pos = rect.get_position();
-    let upper_rect_size = Vector2::new(rect.get_size().x, height);
-    let lower_rect_pos = Vector2::new(rect.get_position().x, rect.get_position().y + height);
-    let lower_rect_size = Vector2::new(rect.get_size().x, rect.get_size().y - height);
+    let upper_rect_pos = rect.position();
+    let upper_rect_size = Vector2::new(rect.size().x, height);
+    let lower_rect_pos = Vector2::new(rect.position().x, rect.position().y + height);
+    let lower_rect_size = Vector2::new(rect.size().x, rect.size().y - height);
     Ok((
         Rect2u::new(upper_rect_pos, upper_rect_size).unwrap(),
         Rect2u::new(lower_rect_pos, lower_rect_size).unwrap(),
@@ -21,17 +21,17 @@ pub fn h_split_rect(rect: Rect2u, height: u32) -> Result<(Rect2u, Rect2u), Regen
 }
 
 pub fn v_split_rect(rect: Rect2u, width: u32) -> Result<(Rect2u, Rect2u), RegenError> {
-    if width == 0 || width >= rect.get_size().x {
+    if width == 0 || width >= rect.size().x {
         return Err(RegenError::InvalidArgument);
     }
-    if rect.get_size().x < 2 {
+    if rect.size().x < 2 {
         return Err(RegenError::InvalidArgument);
     }
 
-    let left_rect_pos = rect.get_position();
-    let left_rect_size = Vector2::new(width, rect.get_size().y);
-    let right_rect_pos = Vector2::new(rect.get_position().x + width, rect.get_position().y);
-    let right_rect_size = Vector2::new(rect.get_size().x - width, rect.get_size().y);
+    let left_rect_pos = rect.position();
+    let left_rect_size = Vector2::new(width, rect.size().y);
+    let right_rect_pos = Vector2::new(rect.position().x + width, rect.position().y);
+    let right_rect_size = Vector2::new(rect.size().x - width, rect.size().y);
     Ok((
         Rect2u::new(left_rect_pos, left_rect_size).unwrap(),
         Rect2u::new(right_rect_pos, right_rect_size).unwrap(),
@@ -39,22 +39,22 @@ pub fn v_split_rect(rect: Rect2u, width: u32) -> Result<(Rect2u, Rect2u), RegenE
 }
 
 pub fn get_rect_above(rect: &Rect2u, y: u32) -> Result<Option<Rect2u>, RegenError> {
-    if y > rect.get_size().y - 1 {
+    if y > rect.size().y - 1 {
         Err(RegenError::OutOfBounds)
     } else if y > 0 {
-        let size = Vector2u::new(rect.get_size().x, y);
-        Ok(Some(Rect2u::new(rect.get_position(), size).unwrap()))
+        let size = Vector2u::new(rect.size().x, y);
+        Ok(Some(Rect2u::new(rect.position(), size).unwrap()))
     } else {
         Ok(None)
     }
 }
 
 pub fn get_rect_left(rect: &Rect2u, x: u32) -> Result<Option<Rect2u>, RegenError> {
-    if x > rect.get_size().x - 1 {
+    if x > rect.size().x - 1 {
         Err(RegenError::OutOfBounds)
     } else if x > 0 {
-        let size = Vector2u::new(x, rect.get_size().y);
-        Ok(Some(Rect2u::new(rect.get_position(), size).unwrap()))
+        let size = Vector2u::new(x, rect.size().y);
+        Ok(Some(Rect2u::new(rect.position(), size).unwrap()))
     } else {
         Ok(None)
     }
@@ -62,10 +62,10 @@ pub fn get_rect_left(rect: &Rect2u, x: u32) -> Result<Option<Rect2u>, RegenError
 
 pub fn get_rect_below(rect: &Rect2u, y: u32) -> Result<Option<Rect2u>, RegenError> {
     match y {
-        _ if y > rect.get_size().y - 1 => Err(RegenError::OutOfBounds),
-        _ if y < rect.get_size().y - 1 => {
-            let position = Vector2u::new(rect.get_position().x, rect.get_position().y + y + 1);
-            let size = Vector2u::new(rect.get_size().x, rect.get_size().y - y - 1);
+        _ if y > rect.size().y - 1 => Err(RegenError::OutOfBounds),
+        _ if y < rect.size().y - 1 => {
+            let position = Vector2u::new(rect.position().x, rect.position().y + y + 1);
+            let size = Vector2u::new(rect.size().x, rect.size().y - y - 1);
             Ok(Some(Rect2u::new(position, size).unwrap()))
         }
         _ => Ok(None),
@@ -74,10 +74,10 @@ pub fn get_rect_below(rect: &Rect2u, y: u32) -> Result<Option<Rect2u>, RegenErro
 
 pub fn get_rect_right(rect: &Rect2u, x: u32) -> Result<Option<Rect2u>, RegenError> {
     match x {
-        _ if x > rect.get_size().x - 1 => Err(RegenError::OutOfBounds),
-        _ if x < rect.get_size().x - 1 => {
-            let position = Vector2u::new(rect.get_position().x + x + 1, rect.get_position().y);
-            let size = Vector2u::new(rect.get_size().x - x - 1, rect.get_size().y);
+        _ if x > rect.size().x - 1 => Err(RegenError::OutOfBounds),
+        _ if x < rect.size().x - 1 => {
+            let position = Vector2u::new(rect.position().x + x + 1, rect.position().y);
+            let size = Vector2u::new(rect.size().x - x - 1, rect.size().y);
             Ok(Some(Rect2u::new(position, size).unwrap()))
         }
         _ => Ok(None),

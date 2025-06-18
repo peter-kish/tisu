@@ -42,7 +42,7 @@ pub struct Filter<T> {
 
 impl<T> Filter<T> {
     pub fn new(pattern: Map<T>, substitute: Map<T>, wildcard: T) -> Result<Self, RegenError> {
-        if pattern.get_size() != substitute.get_size() {
+        if pattern.size() != substitute.size() {
             Err(RegenError::InvalidArgument)
         } else {
             Ok(Self {
@@ -60,7 +60,7 @@ impl<T> Filter<T> {
         wildcard: T,
         properties: FilterProperties,
     ) -> Result<Self, RegenError> {
-        if pattern.get_size() != substitute.get_size() {
+        if pattern.size() != substitute.size() {
             Err(RegenError::InvalidArgument)
         } else {
             Ok(Self {
@@ -72,11 +72,11 @@ impl<T> Filter<T> {
         }
     }
 
-    pub fn get_pattern(&self) -> &Map<T> {
+    pub fn pattern(&self) -> &Map<T> {
         &self.pattern
     }
 
-    pub fn get_substitute(&self) -> &Map<T> {
+    pub fn substitute(&self) -> &Map<T> {
         &self.substitute
     }
 
@@ -87,8 +87,8 @@ impl<T> Filter<T> {
         if rand::rng().random_range(0.0..1.0) > self.properties.probability {
             return false;
         }
-        for x in 0..self.pattern.get_size().x {
-            for y in 0..self.pattern.get_size().y {
+        for x in 0..self.pattern.size().x {
+            for y in 0..self.pattern.size().y {
                 let point = Vector2u::new(x, y);
                 if let Ok(input_field) = input.get(position + point) {
                     if let Ok(pattern_field) = self.pattern.get(point) {
@@ -112,12 +112,12 @@ impl<T> Filter<T> {
         input_field == pattern_field || pattern_field == &self.wildcard
     }
 
-    pub fn substitute(&self, input: &mut Map<T>, position: Vector2u)
+    pub fn apply_substitute(&self, input: &mut Map<T>, position: Vector2u)
     where
         T: Clone + PartialEq,
     {
-        for x in 0..self.pattern.get_size().x {
-            for y in 0..self.pattern.get_size().y {
+        for x in 0..self.pattern.size().x {
+            for y in 0..self.pattern.size().y {
                 let point = Vector2u::new(x, y);
                 if let Ok(substitute_field) = self.substitute.get(point) {
                     self.substitute_field(input, position + point, substitute_field);
@@ -140,17 +140,15 @@ impl<T> Filter<T> {
         Map<T>: Clone,
         T: Clone + PartialEq,
     {
-        if map.get_size().x < self.get_pattern().get_size().x
-            || map.get_size().y < self.get_pattern().get_size().y
-        {
+        if map.size().x < self.pattern().size().x || map.size().y < self.pattern().size().y {
             Err(RegenError::InvalidArgument)
         } else {
             let mut result = map.clone();
-            for x in 0..=map.get_size().x - self.get_pattern().get_size().x {
-                for y in 0..=map.get_size().y - self.get_pattern().get_size().y {
+            for x in 0..=map.size().x - self.pattern().size().x {
+                for y in 0..=map.size().y - self.pattern().size().y {
                     let point = Vector2u::new(x, y);
                     if self.pattern_matches(map, point) {
-                        self.substitute(&mut result, point);
+                        self.apply_substitute(&mut result, point);
                     }
                 }
             }
@@ -283,11 +281,11 @@ mod tests {
         let substitute = Map::<u32>::from_data([[1, 0]]).unwrap();
         let filter = Filter::new(pattern, substitute, 42).unwrap();
 
-        filter.substitute(&mut map, (0, 1).into());
-        assert_eq!(map.get_data(), [1, 0, 1, 0]);
+        filter.apply_substitute(&mut map, (0, 1).into());
+        assert_eq!(map.data(), [1, 0, 1, 0]);
 
-        filter.substitute(&mut map, (1, 0).into());
-        assert_eq!(map.get_data(), [1, 1, 1, 0]);
+        filter.apply_substitute(&mut map, (1, 0).into());
+        assert_eq!(map.data(), [1, 1, 1, 0]);
     }
 
     #[test]
@@ -297,8 +295,8 @@ mod tests {
         let substitute = Map::<u32>::from_data([[1, 2]]).unwrap();
         let filter = Filter::new(pattern, substitute, 2).unwrap();
 
-        filter.substitute(&mut map, (0, 1).into());
-        assert_eq!(map.get_data(), [1, 0, 1, 1]);
+        filter.apply_substitute(&mut map, (0, 1).into());
+        assert_eq!(map.data(), [1, 0, 1, 1]);
     }
 
     #[test]
@@ -321,8 +319,8 @@ mod tests {
 
         assert!(result.is_ok());
         let result_map = result.unwrap();
-        assert_eq!(result_map.get_data(), &expected_data);
-        assert_eq!(result_map.get_size(), map.get_size());
+        assert_eq!(result_map.data(), &expected_data);
+        assert_eq!(result_map.size(), map.size());
     }
 
     #[test]
@@ -362,8 +360,8 @@ mod tests {
 
         assert!(result.is_ok());
         let result_map = result.unwrap();
-        assert_eq!(result_map.get_data(), &expected_data);
-        assert_eq!(result_map.get_size(), map.get_size());
+        assert_eq!(result_map.data(), &expected_data);
+        assert_eq!(result_map.size(), map.size());
     }
 
     #[test]
@@ -386,8 +384,8 @@ mod tests {
 
         assert!(result.is_ok());
         let result_map = result.unwrap();
-        assert_eq!(result_map.get_data(), &expected_data);
-        assert_eq!(result_map.get_size(), map.get_size());
+        assert_eq!(result_map.data(), &expected_data);
+        assert_eq!(result_map.size(), map.size());
     }
 
     #[test]
@@ -416,8 +414,8 @@ mod tests {
 
         assert!(result.is_ok());
         let result_map = result.unwrap();
-        assert_eq!(result_map.get_data(), &expected_data);
-        assert_eq!(result_map.get_size(), map.get_size());
+        assert_eq!(result_map.data(), &expected_data);
+        assert_eq!(result_map.size(), map.size());
     }
 
     #[test]
