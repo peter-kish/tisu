@@ -197,9 +197,9 @@ pub fn load_tiled_filters(
     file: &str,
     wildcard: Option<u32>,
 ) -> Result<FilterCollection<Option<u32>>, RegenError> {
-    let layers = TiledMapConverter::load(file)?;
+    let load_result = TiledMapConverter::load(file)?;
     let mut filter_collection = FilterCollection::<Option<u32>>::default();
-    for layer in &layers {
+    for layer in &load_result.map_layers {
         let segments = map_segmenter::extract_segments(&layer.map, &None);
         if segments.is_empty() || segments.len() % 2 > 0 {
             return Err(RegenError::InvalidArgument);
@@ -209,13 +209,15 @@ pub fn load_tiled_filters(
                 if idx >= segments.len() {
                     break;
                 }
-                let pattern = layer.map.extract_segment(segments[idx])?;
-                let substitute = layer.map.extract_segment(segments[idx + 1])?;
+                let pattern_rect = segments[idx];
+                let substitute_rect = segments[idx + 1];
+                let pattern = layer.map.extract_segment(pattern_rect)?;
+                let substitute = layer.map.extract_segment(substitute_rect)?;
                 let filter = Filter::new_with_properties(
                     pattern,
                     substitute,
                     wildcard,
-                    layer.properties.clone(),
+                    load_result.get_properties_for_rects(pattern_rect, substitute_rect)?,
                 )?;
                 filter_collection.push(filter);
                 idx += 2;
@@ -449,7 +451,13 @@ mod tests {
     fn test_filter_collection_load_tiled_success() {
         let pattern = Map::<Option<u32>>::from_data([[Some(0), Some(1)]]).unwrap();
         let substitute = Map::<Option<u32>>::from_data([[Some(1), Some(1)]]).unwrap();
-        let filter1 = Filter::new(pattern, substitute, Some(4)).unwrap();
+        let filter1 = Filter::new_with_properties(
+            pattern,
+            substitute,
+            Some(4),
+            FilterProperties { probability: 0.0 },
+        )
+        .unwrap();
 
         let pattern =
             Map::<Option<u32>>::from_data([[Some(2), Some(2)], [Some(2), Some(2)]]).unwrap();

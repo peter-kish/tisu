@@ -19,11 +19,11 @@ struct CmdLineArgs {
 fn main() {
     let args = CmdLineArgs::parse();
 
-    let layers = TiledMapConverter::load(&args.input).expect("Failed to load map");
+    let load_result = TiledMapConverter::load(&args.input).expect("Failed to load map");
     let filters =
         filter::load_tiled_filters(&args.filters, Some(4)).expect("Failed to load filters");
     let new_map = filters
-        .apply(&layers[0].map)
+        .apply(&load_result.map_layers[0].map)
         .expect("Failed to apply filters");
     TiledMapConverter::save(
         args.output.as_str(),

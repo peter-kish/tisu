@@ -2,6 +2,7 @@ use std::fs::File;
 
 use crate::filter::FilterProperties;
 use crate::map::Map;
+use crate::rect2::Rect2u;
 use crate::regen_error::RegenError;
 use crate::vector2::Vector2u;
 use tiled::Loader;
@@ -13,37 +14,123 @@ pub struct TiledMapConverter {}
 
 pub struct TiledMapLayer {
     pub map: Map<Option<u32>>,
+}
+
+pub struct TiledPropertyLayer {
+    pub property_rects: Vec<TiledPropertyRect>,
+}
+
+pub struct TiledPropertyRect {
+    pub rect: Rect2u,
     pub properties: FilterProperties,
 }
 
+pub struct TiledLoadResult {
+    pub map_layers: Vec<TiledMapLayer>,
+    pub property_layers: Vec<TiledPropertyLayer>,
+}
+
+impl TiledPropertyLayer {
+    pub fn get_properties_for_rects(
+        &self,
+        rect1: Rect2u,
+        rect2: Rect2u,
+    ) -> Option<FilterProperties> {
+        for property_rect in &self.property_rects {
+            if property_rect.rect.contains_rect(&rect1) && property_rect.rect.contains_rect(&rect2)
+            {
+                return Some(property_rect.properties.clone());
+            }
+        }
+
+        None
+    }
+}
+
+impl TiledLoadResult {
+    pub fn get_properties_for_rects(
+        &self,
+        rect1: Rect2u,
+        rect2: Rect2u,
+    ) -> Result<FilterProperties, RegenError> {
+        for property_layer in &self.property_layers {
+            if let Some(properties) = property_layer.get_properties_for_rects(rect1, rect2) {
+                return Ok(properties);
+            }
+        }
+        Ok(FilterProperties::default())
+    }
+}
+
 impl TiledMapConverter {
-    pub fn load(file: &str) -> Result<Vec<TiledMapLayer>, RegenError> {
+    pub fn load(file: &str) -> Result<TiledLoadResult, RegenError> {
         let mut loader = Loader::new();
         let tmx_map = loader
             .load_tmx_map(file)
             .map_err(|_| RegenError::InvalidArgument)?;
 
-        let mut layers: Vec<TiledMapLayer> = vec![];
+        let mut result = TiledLoadResult {
+            map_layers: vec![],
+            property_layers: vec![],
+        };
+        let tile_size = Vector2u::new(tmx_map.tile_width, tmx_map.tile_height);
         for layer in tmx_map.layers() {
-            if let tiled::LayerType::Tiles(tiled::TileLayer::Finite(finite)) = layer.layer_type() {
-                let mut map = Map::<Option<u32>>::new((finite.width(), finite.height()).into());
-                for x in 0..finite.width() {
-                    for y in 0..finite.height() {
-                        if let Some(tile) = finite.get_tile(x as i32, y as i32) {
-                            map.set((x, y).into(), Some(tile.id()))?;
-                        } else {
-                            map.set((x, y).into(), None)?;
-                        }
-                    }
-                }
+            if let tiled::LayerType::Tiles(tiled::TileLayer::Finite(finite_tile_layer)) =
+                layer.layer_type()
+            {
+                let map = Self::load_finite_tile_layer(&finite_tile_layer)?;
 
-                layers.push(TiledMapLayer {
-                    map,
-                    properties: (&layer.properties).into(),
-                });
+                result.map_layers.push(TiledMapLayer { map });
+            }
+
+            if let tiled::LayerType::Objects(object_layer) = layer.layer_type() {
+                let property_layer = Self::load_object_layer(&object_layer, tile_size)?;
+                result.property_layers.push(property_layer);
             }
         }
-        Ok(layers)
+        Ok(result)
+    }
+
+    fn load_finite_tile_layer(
+        layer: &tiled::FiniteTileLayer,
+    ) -> Result<Map<Option<u32>>, RegenError> {
+        let mut map = Map::<Option<u32>>::new((layer.width(), layer.height()).into());
+        for x in 0..layer.width() {
+            for y in 0..layer.height() {
+                if let Some(tile) = layer.get_tile(x as i32, y as i32) {
+                    map.set((x, y).into(), Some(tile.id()))?;
+                } else {
+                    map.set((x, y).into(), None)?;
+                }
+            }
+        }
+
+        Ok(map)
+    }
+
+    fn load_object_layer(
+        layer: &tiled::ObjectLayer,
+        tile_size: Vector2u,
+    ) -> Result<TiledPropertyLayer, RegenError> {
+        let mut result = TiledPropertyLayer {
+            property_rects: vec![],
+        };
+        for object in layer.objects() {
+            if let tiled::ObjectShape::Rect { width, height } = object.shape {
+                let position = Vector2u::new(object.x.round() as u32, object.y.round() as u32);
+                let size = Vector2u::new(width.round() as u32, height.round() as u32);
+                let pos_converted =
+                    Vector2u::new(position.x / tile_size.x, position.y / tile_size.y);
+                let size_converted = Vector2u::new(size.x / tile_size.x, size.y / tile_size.y);
+
+                let property_rect = TiledPropertyRect {
+                    rect: Rect2u::new(pos_converted, size_converted)?,
+                    properties: (&object.properties).into(),
+                };
+                result.property_rects.push(property_rect);
+            }
+        }
+        Ok(result)
     }
 
     // TODO: Test
@@ -148,10 +235,16 @@ mod tests {
         );
 
         assert!(result.is_ok());
-        let layers = result.unwrap();
-        assert_eq!(layers.len(), 1);
-        assert_eq!(layers[0].map.get_size(), (3, 3).into());
-        assert_eq!(layers[0].map.get((0, 0).into()).unwrap(), &None);
-        assert_eq!(layers[0].map.get((1, 1).into()).unwrap(), &Some(3));
+        let load_result = result.unwrap();
+        assert_eq!(load_result.map_layers.len(), 1);
+        assert_eq!(load_result.map_layers[0].map.get_size(), (3, 3).into());
+        assert_eq!(
+            load_result.map_layers[0].map.get((0, 0).into()).unwrap(),
+            &None
+        );
+        assert_eq!(
+            load_result.map_layers[0].map.get((1, 1).into()).unwrap(),
+            &Some(3)
+        );
     }
 }
