@@ -8,27 +8,54 @@ use crate::regen_error::RegenError;
 use crate::tiled_map_converter::TiledMapConverter;
 use crate::vector2::Vector2u;
 
+#[derive(Clone, PartialEq, Debug, Default)]
+pub enum ApplyTo {
+    #[default]
+    Destination,
+    Source,
+}
+
+impl TryFrom<&String> for ApplyTo {
+    type Error = ();
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        match value.as_str() {
+            "destination" => Ok(ApplyTo::Destination),
+            "source" => Ok(ApplyTo::Source),
+            _ => Err(()),
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Debug)]
 pub struct FilterProperties {
     probability: f32,
+    apply_to: ApplyTo,
 }
 
 impl From<&Properties> for FilterProperties {
     fn from(value: &Properties) -> Self {
         let probability = match value.get("probability") {
-            Some(PropertyValue::FloatValue(p)) => p,
-            _ => &1.0,
+            Some(PropertyValue::FloatValue(p)) => *p,
+            _ => 1.0,
+        };
+        let apply_to: ApplyTo = match value.get("apply_to") {
+            Some(PropertyValue::StringValue(p)) => p.try_into().unwrap_or(ApplyTo::default()),
+            _ => ApplyTo::Destination,
         };
 
         Self {
-            probability: *probability,
+            probability,
+            apply_to,
         }
     }
 }
 
 impl Default for FilterProperties {
     fn default() -> Self {
-        Self { probability: 1.0 }
+        Self {
+            probability: 1.0,
+            apply_to: ApplyTo::Destination,
+        }
     }
 }
 
@@ -143,16 +170,26 @@ impl<T> Filter<T> {
         if map.size().x < self.pattern().size().x || map.size().y < self.pattern().size().y {
             Err(RegenError::InvalidArgument)
         } else {
-            let mut result = map.clone();
+            let mut destination = map.clone();
             for x in 0..=map.size().x - self.pattern().size().x {
                 for y in 0..=map.size().y - self.pattern().size().y {
                     let point = Vector2u::new(x, y);
-                    if self.pattern_matches(map, point) {
-                        self.apply_substitute(&mut result, point);
+                    match self.properties.apply_to {
+                        // TODO: Test different ApplyTo variants
+                        ApplyTo::Destination => {
+                            if self.pattern_matches(map, point) {
+                                self.apply_substitute(&mut destination, point);
+                            }
+                        }
+                        ApplyTo::Source => {
+                            if self.pattern_matches(&destination, point) {
+                                self.apply_substitute(&mut destination, point);
+                            }
+                        }
                     }
                 }
             }
-            Ok(result)
+            Ok(destination)
         }
     }
 }
@@ -453,7 +490,10 @@ mod tests {
             pattern,
             substitute,
             Some(4),
-            FilterProperties { probability: 0.0 },
+            FilterProperties {
+                probability: 0.0,
+                apply_to: ApplyTo::Destination,
+            },
         )
         .unwrap();
 
