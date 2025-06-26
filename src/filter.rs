@@ -486,16 +486,7 @@ mod tests {
     fn test_filter_collection_load_tiled_success() {
         let pattern = Map::<Option<u32>>::from_data([[Some(0), Some(1)]]).unwrap();
         let substitute = Map::<Option<u32>>::from_data([[Some(1), Some(1)]]).unwrap();
-        let filter1 = Filter::new_with_properties(
-            pattern,
-            substitute,
-            Some(4),
-            FilterProperties {
-                probability: 0.0,
-                apply_to: ApplyTo::Destination,
-            },
-        )
-        .unwrap();
+        let filter1 = Filter::new(pattern, substitute, Some(4)).unwrap();
 
         let pattern =
             Map::<Option<u32>>::from_data([[Some(2), Some(2)], [Some(2), Some(2)]]).unwrap();
@@ -507,20 +498,96 @@ mod tests {
         let substitute = Map::<Option<u32>>::from_data([[Some(0), Some(0), Some(0)]]).unwrap();
         let filter3 = Filter::new(pattern, substitute, Some(4)).unwrap();
 
-        let fc = load_tiled_filters(
+        let filter_collection = load_tiled_filters(
             format!(
-                "{}/{}",
+                "{}/data/test_apply_filter_collection/filter_collection.tmx",
                 env!("CARGO_MANIFEST_DIR"),
-                "data/filter_collection.tmx"
             )
             .as_str(),
             Some(4),
         );
 
-        assert!(fc.is_ok());
-        let filters = &fc.unwrap().filters;
+        assert!(filter_collection.is_ok());
+        let filters = &filter_collection.unwrap().filters;
         assert_eq!(filters[0], filter1);
         assert_eq!(filters[1], filter2);
         assert_eq!(filters[2], filter3);
+    }
+
+    // TODO: test_filter_collection_load_tiled_failure
+
+    struct TestData {
+        filter_collection: FilterCollection<Option<u32>>,
+        input: Map<Option<u32>>,
+        expected_output: Map<Option<u32>>,
+    }
+
+    fn load_test_map(file_path: &str) -> Map<Option<u32>> {
+        let result = TiledMapConverter::load(file_path);
+        result.unwrap().map_layers[0].map.clone()
+    }
+
+    fn load_test_data(test_name: &str) -> TestData {
+        let filter_collection = load_tiled_filters(
+            format!(
+                "{}/data/test_{}/filter_collection.tmx",
+                env!("CARGO_MANIFEST_DIR"),
+                test_name
+            )
+            .as_str(),
+            Some(4),
+        )
+        .unwrap();
+
+        let input = load_test_map(
+            format!(
+                "{}/data/test_{}/input.tmx",
+                env!("CARGO_MANIFEST_DIR"),
+                test_name
+            )
+            .as_str(),
+        );
+
+        let expected_output = load_test_map(
+            format!(
+                "{}/data/test_{}/expected_output.tmx",
+                env!("CARGO_MANIFEST_DIR"),
+                test_name
+            )
+            .as_str(),
+        );
+
+        TestData {
+            filter_collection,
+            input,
+            expected_output,
+        }
+    }
+
+    #[test]
+    fn apply_filter_collection() {
+        let test_data = load_test_data("apply_filter_collection");
+
+        let output = test_data.filter_collection.apply(&test_data.input).unwrap();
+
+        assert_eq!(test_data.expected_output, output);
+    }
+
+    #[test]
+    fn apply_filter_collection_probability() {
+        let test_data = load_test_data("apply_filter_collection_probability");
+
+        let output = test_data.filter_collection.apply(&test_data.input).unwrap();
+
+        assert_eq!(test_data.expected_output, output);
+    }
+
+    #[test]
+    fn apply_filter_collection_to_source() {
+        let test_data = load_test_data("apply_filter_collection_to_source");
+
+        let output = test_data.filter_collection.apply(&test_data.input).unwrap();
+
+        assert_eq!(test_data.expected_output, output);
     }
 }
