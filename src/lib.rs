@@ -7,3 +7,18 @@ pub mod rect2_utils;
 pub mod regen_error;
 pub mod tiled_map_converter;
 pub mod vector2;
+
+#[cfg(test)]
+mod filter_tests;
+#[cfg(test)]
+mod map_segmenter_tests;
+#[cfg(test)]
+mod map_tests;
+#[cfg(test)]
+mod painter_tests;
+#[cfg(test)]
+mod rect2_tests;
+#[cfg(test)]
+mod rect2_utils_tests;
+#[cfg(test)]
+mod vector2_tests;

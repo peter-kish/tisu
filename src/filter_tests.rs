@@ -1,0 +1,331 @@
+use crate::{
+    filter,
+    filter::{Filter, FilterCollection},
+    map::Map,
+    regen_error::RegenError,
+    tiled_map_converter::TiledMapConverter,
+};
+
+#[test]
+fn test_constructor_success() {
+    let pattern = Map::<u32>::new((2, 2).into());
+    let substitute = Map::<u32>::new((2, 2).into());
+    let result = Filter::new(pattern.clone(), substitute.clone(), 42);
+
+    assert!(result.is_ok());
+    let filter = result.unwrap();
+    assert_eq!(filter.pattern(), &pattern);
+    assert_eq!(filter.substitute(), &substitute);
+}
+
+#[test]
+fn test_constructor_failure() {
+    let pattern = Map::<u32>::new((2, 2).into());
+    let substitute = Map::<u32>::new((3, 2).into());
+    let result = Filter::new(pattern, substitute, 42);
+
+    assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
+}
+
+#[test]
+fn test_pattern_matches() {
+    let map = Map::<u32>::from_data([[1, 0], [0, 1]]).unwrap();
+    let pattern = Map::<u32>::from_data([[1, 0]]).unwrap();
+    let substitute = Map::<u32>::from_data([[1, 0]]).unwrap();
+    let filter = Filter::new(pattern, substitute, 42).unwrap();
+
+    assert!(filter.pattern_matches(&map, (0, 0).into()));
+    assert!(!filter.pattern_matches(&map, (0, 1).into()));
+    assert!(!filter.pattern_matches(&map, (1, 1).into()));
+}
+
+#[test]
+fn test_pattern_match_with_wildcard() {
+    let map = Map::<u32>::from_data([[1, 0], [1, 1]]).unwrap();
+    let pattern = Map::<u32>::from_data([[1, 2]]).unwrap();
+    let substitute = Map::<u32>::from_data([[1, 0]]).unwrap();
+    let filter = Filter::new(pattern, substitute, 2).unwrap();
+
+    assert!(filter.pattern_matches(&map, (0, 0).into()));
+    assert!(filter.pattern_matches(&map, (0, 1).into()));
+    assert!(!filter.pattern_matches(&map, (1, 1).into()));
+}
+
+#[test]
+fn test_substitute() {
+    let mut map = Map::<u32>::from_data([[1, 0], [0, 1]]).unwrap();
+    let pattern = Map::<u32>::from_data([[1, 0]]).unwrap();
+    let substitute = Map::<u32>::from_data([[1, 0]]).unwrap();
+    let filter = Filter::new(pattern, substitute, 42).unwrap();
+
+    filter.apply_substitute(&mut map, (0, 1).into());
+    assert_eq!(map.data(), [1, 0, 1, 0]);
+
+    filter.apply_substitute(&mut map, (1, 0).into());
+    assert_eq!(map.data(), [1, 1, 1, 0]);
+}
+
+#[test]
+fn test_substitute_with_wildcard() {
+    let mut map = Map::<u32>::from_data([[1, 0], [0, 1]]).unwrap();
+    let pattern = Map::<u32>::from_data([[1, 0]]).unwrap();
+    let substitute = Map::<u32>::from_data([[1, 2]]).unwrap();
+    let filter = Filter::new(pattern, substitute, 2).unwrap();
+
+    filter.apply_substitute(&mut map, (0, 1).into());
+    assert_eq!(map.data(), [1, 0, 1, 1]);
+}
+
+#[test]
+fn test_apply_filter_success() {
+    // 1 0 1
+    // 1 1 1
+    // 1 0 1
+    let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+    // 1 0
+    let pattern = Map::<u32>::from_data([[1, 0]]).unwrap();
+    // 0 1
+    let substitute = Map::<u32>::from_data([[0, 1]]).unwrap();
+    let filter = Filter::new(pattern, substitute, 42).unwrap();
+    // 0 1 1
+    // 1 1 1
+    // 0 1 1
+    let expected_data = [0, 1, 1, 1, 1, 1, 0, 1, 1];
+
+    let result = filter.apply(&map);
+
+    assert!(result.is_ok());
+    let result_map = result.unwrap();
+    assert_eq!(result_map.data(), &expected_data);
+    assert_eq!(result_map.size(), map.size());
+}
+
+#[test]
+fn test_apply_filter_failure() {
+    // 1 0 1
+    // 1 1 1
+    // 1 0 1
+    let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+    // 1 0 0 0
+    let pattern = Map::<u32>::from_data([[1, 0, 0, 0]]).unwrap();
+    // 0 1 1 1
+    let substitute = Map::<u32>::from_data([[0, 1, 1, 1]]).unwrap();
+    let filter = Filter::new(pattern, substitute, 42).unwrap();
+
+    let result = filter.apply(&map);
+
+    assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
+}
+
+#[test]
+fn test_apply_filter_patter_with_wildcard() {
+    // 1 0 1
+    // 1 1 1
+    // 1 0 1
+    let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+    // 1 W 1
+    let pattern = Map::<u32>::from_data([[1, 2, 1]]).unwrap();
+    // 0 1 0
+    let substitute = Map::<u32>::from_data([[0, 1, 0]]).unwrap();
+    let filter = Filter::new(pattern, substitute, 2).unwrap();
+    // 0 1 0
+    // 0 1 0
+    // 0 1 0
+    let expected_data = [0, 1, 0, 0, 1, 0, 0, 1, 0];
+
+    let result = filter.apply(&map);
+
+    assert!(result.is_ok());
+    let result_map = result.unwrap();
+    assert_eq!(result_map.data(), &expected_data);
+    assert_eq!(result_map.size(), map.size());
+}
+
+#[test]
+fn test_apply_filter_substitute_with_wildcard() {
+    // 1 0 1
+    // 1 1 1
+    // 1 0 1
+    let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+    // 1 0 1
+    let pattern = Map::<u32>::from_data([[1, 0, 1]]).unwrap();
+    // W 1 W
+    let substitute = Map::<u32>::from_data([[2, 1, 2]]).unwrap();
+    let filter = Filter::new(pattern, substitute, 2).unwrap();
+    // 1 1 1
+    // 1 1 1
+    // 1 1 1
+    let expected_data = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+
+    let result = filter.apply(&map);
+
+    assert!(result.is_ok());
+    let result_map = result.unwrap();
+    assert_eq!(result_map.data(), &expected_data);
+    assert_eq!(result_map.size(), map.size());
+}
+
+#[test]
+fn test_apply_filter_collection_success() {
+    // 1 0 1
+    // 1 1 1
+    // 1 0 1
+    let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+    // 1 0
+    let pattern1 = Map::<u32>::from_data([[1, 0]]).unwrap();
+    // 0 1
+    let substitute1 = Map::<u32>::from_data([[0, 1]]).unwrap();
+    let filter1 = Filter::new(pattern1, substitute1, 42).unwrap();
+    // 0 1 1
+    let pattern2 = Map::<u32>::from_data([[0, 1, 1]]).unwrap();
+    // 0 0 0
+    let substitute2 = Map::<u32>::from_data([[0, 0, 0]]).unwrap();
+    let filter2 = Filter::new(pattern2, substitute2, 42).unwrap();
+    let filter_collection = FilterCollection::new(&[filter1, filter2]);
+    // 0 0 0
+    // 1 1 1
+    // 0 0 0
+    let expected_data = [0, 0, 0, 1, 1, 1, 0, 0, 0];
+
+    let result = filter_collection.apply(&map);
+
+    assert!(result.is_ok());
+    let result_map = result.unwrap();
+    assert_eq!(result_map.data(), &expected_data);
+    assert_eq!(result_map.size(), map.size());
+}
+
+#[test]
+fn test_apply_filter_collection_failure() {
+    // 1 0 1
+    // 1 1 1
+    // 1 0 1
+    let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
+    let filter_collection = FilterCollection::new(&[]);
+    let result = filter_collection.apply(&map);
+
+    assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
+}
+
+#[test]
+fn test_filter_collection_push() {
+    let mut fc = FilterCollection::<u32>::default();
+    // 1 0
+    let pattern = Map::<u32>::from_data([[1, 0]]).unwrap();
+    // 0 1
+    let substitute = Map::<u32>::from_data([[0, 1]]).unwrap();
+    let filter = Filter::new(pattern, substitute, 42).unwrap();
+
+    fc.push(filter.clone());
+
+    assert_eq!(fc.filters.len(), 1);
+    assert_eq!(fc.filters[0], filter);
+}
+
+#[test]
+fn test_filter_collection_load_tiled_success() {
+    let pattern = Map::<Option<u32>>::from_data([[Some(0), Some(1)]]).unwrap();
+    let substitute = Map::<Option<u32>>::from_data([[Some(1), Some(1)]]).unwrap();
+    let filter1 = Filter::new(pattern, substitute, Some(4)).unwrap();
+
+    let pattern = Map::<Option<u32>>::from_data([[Some(2), Some(2)], [Some(2), Some(2)]]).unwrap();
+    let substitute =
+        Map::<Option<u32>>::from_data([[Some(2), Some(3)], [Some(2), Some(2)]]).unwrap();
+    let filter2 = Filter::new(pattern, substitute, Some(4)).unwrap();
+
+    let pattern = Map::<Option<u32>>::from_data([[Some(3), Some(4), Some(3)]]).unwrap();
+    let substitute = Map::<Option<u32>>::from_data([[Some(0), Some(0), Some(0)]]).unwrap();
+    let filter3 = Filter::new(pattern, substitute, Some(4)).unwrap();
+
+    let filter_collection = filter::load_tiled_filters(
+        format!(
+            "{}/data/test_apply_filter_collection/filter_collection.tmx",
+            env!("CARGO_MANIFEST_DIR"),
+        )
+        .as_str(),
+        Some(4),
+    );
+
+    assert!(filter_collection.is_ok());
+    let filters = &filter_collection.unwrap().filters;
+    assert_eq!(filters[0], filter1);
+    assert_eq!(filters[1], filter2);
+    assert_eq!(filters[2], filter3);
+}
+
+// TODO: test_filter_collection_load_tiled_failure
+
+struct TestData {
+    filter_collection: FilterCollection<Option<u32>>,
+    input: Map<Option<u32>>,
+    expected_output: Map<Option<u32>>,
+}
+
+fn load_test_map(file_path: &str) -> Map<Option<u32>> {
+    let result = TiledMapConverter::load(file_path);
+    result.unwrap().map_layers[0].map.clone()
+}
+
+fn load_test_data(test_name: &str) -> TestData {
+    let filter_collection = filter::load_tiled_filters(
+        format!(
+            "{}/data/test_{}/filter_collection.tmx",
+            env!("CARGO_MANIFEST_DIR"),
+            test_name
+        )
+        .as_str(),
+        Some(4),
+    )
+    .unwrap();
+
+    let input = load_test_map(
+        format!(
+            "{}/data/test_{}/input.tmx",
+            env!("CARGO_MANIFEST_DIR"),
+            test_name
+        )
+        .as_str(),
+    );
+
+    let expected_output = load_test_map(
+        format!(
+            "{}/data/test_{}/expected_output.tmx",
+            env!("CARGO_MANIFEST_DIR"),
+            test_name
+        )
+        .as_str(),
+    );
+
+    TestData {
+        filter_collection,
+        input,
+        expected_output,
+    }
+}
+
+#[test]
+fn apply_filter_collection() {
+    let test_data = load_test_data("apply_filter_collection");
+
+    let output = test_data.filter_collection.apply(&test_data.input).unwrap();
+
+    assert_eq!(test_data.expected_output, output);
+}
+
+#[test]
+fn apply_filter_collection_probability() {
+    let test_data = load_test_data("apply_filter_collection_probability");
+
+    let output = test_data.filter_collection.apply(&test_data.input).unwrap();
+
+    assert_eq!(test_data.expected_output, output);
+}
+
+#[test]
+fn apply_filter_collection_to_source() {
+    let test_data = load_test_data("apply_filter_collection_to_source");
+
+    let output = test_data.filter_collection.apply(&test_data.input).unwrap();
+
+    assert_eq!(test_data.expected_output, output);
+}
