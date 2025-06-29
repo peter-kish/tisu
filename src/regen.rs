@@ -15,6 +15,9 @@ struct CmdLineArgs {
     /// Output file path
     #[arg(short, long, default_value_t = String::from("output.png"))]
     output: String,
+    /// Output zoom level
+    #[arg(short, long, default_value_t = 1)]
+    zoom: u32,
 }
 
 #[derive(Clone, Copy, Default)]
@@ -29,14 +32,14 @@ enum MapTile {
 
 #[derive(Clone, Copy)]
 struct RoadConfiguration {
-    wh: u32,
+    width_or_height: u32,
     margin: u32,
     tile: MapTile,
 }
 
 impl RoadConfiguration {
     fn min_size(&self) -> u32 {
-        self.wh + 2 * self.margin
+        self.width_or_height + 2 * self.margin
     }
 }
 
@@ -101,7 +104,7 @@ fn split_rect_with_road(
             h_split_rect_with_road(
                 map,
                 rect,
-                split.configuration.wh,
+                split.configuration.width_or_height,
                 split.configuration.margin,
                 split.configuration.tile,
             )
@@ -110,7 +113,7 @@ fn split_rect_with_road(
             v_split_rect_with_road(
                 map,
                 rect,
-                split.configuration.wh,
+                split.configuration.width_or_height,
                 split.configuration.margin,
                 split.configuration.tile,
             )
@@ -123,13 +126,13 @@ fn split_rect_with_road(
 
 fn get_road_split(rect: Rect2u, road_configurations: &[RoadConfiguration]) -> Option<RoadSplit> {
     let horizontal = rect.size().y > rect.size().x;
-    let wh = if rect.size().y > rect.size().x {
+    let width_or_height = if rect.size().y > rect.size().x {
         rect.size().y
     } else {
         rect.size().x
     };
     for configuration in road_configurations {
-        if wh > configuration.min_size() {
+        if width_or_height > configuration.min_size() {
             return Some(RoadSplit {
                 horizontal,
                 configuration: *configuration,
@@ -142,17 +145,17 @@ fn get_road_split(rect: Rect2u, road_configurations: &[RoadConfiguration]) -> Op
 fn generate_roads(map: &mut Map<MapTile>, rect: Rect2u) -> Vec<Rect2u> {
     let road_configurations = vec![
         RoadConfiguration {
-            wh: 7,
+            width_or_height: 7,
             margin: 17,
             tile: MapTile::Asphalt,
         },
         RoadConfiguration {
-            wh: 5,
+            width_or_height: 5,
             margin: 12,
             tile: MapTile::Asphalt,
         },
         RoadConfiguration {
-            wh: 3,
+            width_or_height: 3,
             margin: 8,
             tile: MapTile::Asphalt,
         },
@@ -219,7 +222,7 @@ fn generate_blocks(map: &mut Map<MapTile>, blocks: &[Rect2u]) {
                 map,
                 block_inner,
                 &[RoadConfiguration {
-                    wh: 1,
+                    width_or_height: 1,
                     margin: 4,
                     tile: MapTile::Concrete,
                 }],
@@ -242,7 +245,7 @@ fn generate_map() -> Map<MapTile> {
     map
 }
 
-fn draw_map(map: Map<MapTile>) -> RgbImage {
+fn draw_map(map: Map<MapTile>, zoom: u32) -> RgbImage {
     let mut image = RgbImage::new(map.size().x, map.size().y);
     for x in 0..map.size().x {
         for y in 0..map.size().y {
@@ -250,11 +253,10 @@ fn draw_map(map: Map<MapTile>) -> RgbImage {
         }
     }
 
-    const ZOOM: u32 = 4;
     imageops::resize(
         &image,
-        image.width() * ZOOM,
-        image.height() * ZOOM,
+        image.width() * zoom,
+        image.height() * zoom,
         imageops::FilterType::Nearest,
     )
 }
@@ -262,7 +264,7 @@ fn draw_map(map: Map<MapTile>) -> RgbImage {
 fn main() {
     let args = CmdLineArgs::parse();
     let map = generate_map();
-    draw_map(map)
+    draw_map(map, args.zoom)
         .save(args.output)
         .expect("Failed to save image");
 }
