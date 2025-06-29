@@ -247,4 +247,6 @@ mod tests {
             &Some(3)
         );
     }
+
+    // TODO: test_load_failure
 }

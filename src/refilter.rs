@@ -1,5 +1,5 @@
 use clap::Parser;
-use regen::filter;
+use regen::tiled_filter_loader::TiledFilterLoader;
 use regen::tiled_map_loader::TiledMapLoader;
 
 #[derive(Parser)]
@@ -20,8 +20,7 @@ fn main() {
     let args = CmdLineArgs::parse();
 
     let load_result = TiledMapLoader::load(&args.input).expect("Failed to load map");
-    let filters =
-        filter::load_tiled_filters(&args.filters, Some(4)).expect("Failed to load filters");
+    let filters = TiledFilterLoader::load(&args.filters, Some(4)).expect("Failed to load filters");
     let new_map = filters
         .apply(&load_result.map_layers[0].map)
         .expect("Failed to apply filters");

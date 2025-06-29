@@ -1,8 +1,8 @@
 use crate::{
-    filter,
     filter::{Filter, FilterCollection},
     map::Map,
     regen_error::RegenError,
+    tiled_filter_loader::TiledFilterLoader,
     tiled_map_loader::TiledMapLoader,
 };
 
@@ -222,39 +222,6 @@ fn test_filter_collection_push() {
     assert_eq!(fc.filters[0], filter);
 }
 
-#[test]
-fn test_filter_collection_load_tiled_success() {
-    let pattern = Map::<Option<u32>>::from_data([[Some(0), Some(1)]]).unwrap();
-    let substitute = Map::<Option<u32>>::from_data([[Some(1), Some(1)]]).unwrap();
-    let filter1 = Filter::new(pattern, substitute, Some(4)).unwrap();
-
-    let pattern = Map::<Option<u32>>::from_data([[Some(2), Some(2)], [Some(2), Some(2)]]).unwrap();
-    let substitute =
-        Map::<Option<u32>>::from_data([[Some(2), Some(3)], [Some(2), Some(2)]]).unwrap();
-    let filter2 = Filter::new(pattern, substitute, Some(4)).unwrap();
-
-    let pattern = Map::<Option<u32>>::from_data([[Some(3), Some(4), Some(3)]]).unwrap();
-    let substitute = Map::<Option<u32>>::from_data([[Some(0), Some(0), Some(0)]]).unwrap();
-    let filter3 = Filter::new(pattern, substitute, Some(4)).unwrap();
-
-    let filter_collection = filter::load_tiled_filters(
-        format!(
-            "{}/data/test_apply_filter_collection/filter_collection.tmx",
-            env!("CARGO_MANIFEST_DIR"),
-        )
-        .as_str(),
-        Some(4),
-    );
-
-    assert!(filter_collection.is_ok());
-    let filters = &filter_collection.unwrap().filters;
-    assert_eq!(filters[0], filter1);
-    assert_eq!(filters[1], filter2);
-    assert_eq!(filters[2], filter3);
-}
-
-// TODO: test_filter_collection_load_tiled_failure
-
 struct TestData {
     filter_collection: FilterCollection<Option<u32>>,
     input: Map<Option<u32>>,
@@ -267,7 +234,7 @@ fn load_test_map(file_path: &str) -> Map<Option<u32>> {
 }
 
 fn load_test_data(test_name: &str) -> TestData {
-    let filter_collection = filter::load_tiled_filters(
+    let filter_collection = TiledFilterLoader::load(
         format!(
             "{}/data/test_{}/filter_collection.tmx",
             env!("CARGO_MANIFEST_DIR"),

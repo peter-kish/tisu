@@ -3,9 +3,7 @@ use rand::Rng;
 use tiled::{Properties, PropertyValue};
 
 use crate::map::Map;
-use crate::map_segmenter;
 use crate::regen_error::RegenError;
-use crate::tiled_map_loader::TiledMapLoader;
 use crate::vector2::Vector2u;
 
 #[derive(Clone, PartialEq, Debug, Default)]
@@ -226,38 +224,4 @@ impl<T> FilterCollection<T> {
     pub fn push(&mut self, filter: Filter<T>) {
         self.filters.push(filter);
     }
-}
-
-pub fn load_tiled_filters(
-    file: &str,
-    wildcard: Option<u32>,
-) -> Result<FilterCollection<Option<u32>>, RegenError> {
-    let load_result = TiledMapLoader::load(file)?;
-    let mut filter_collection = FilterCollection::<Option<u32>>::default();
-    for layer in &load_result.map_layers {
-        let segments = map_segmenter::extract_segments(&layer.map, &None);
-        if segments.is_empty() || segments.len() % 2 > 0 {
-            return Err(RegenError::InvalidArgument);
-        } else {
-            let mut idx = 0;
-            loop {
-                if idx >= segments.len() {
-                    break;
-                }
-                let pattern_rect = segments[idx];
-                let substitute_rect = segments[idx + 1];
-                let pattern = layer.map.extract_segment(pattern_rect)?;
-                let substitute = layer.map.extract_segment(substitute_rect)?;
-                let filter = Filter::new_with_properties(
-                    pattern,
-                    substitute,
-                    wildcard,
-                    load_result.get_properties_for_rects(pattern_rect, substitute_rect)?,
-                )?;
-                filter_collection.push(filter);
-                idx += 2;
-            }
-        }
-    }
-    Ok(filter_collection)
 }
