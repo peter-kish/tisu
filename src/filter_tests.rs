@@ -3,7 +3,7 @@ use crate::{
     filter::{Filter, FilterCollection},
     map::Map,
     regen_error::RegenError,
-    tiled_map_converter::TiledMapConverter,
+    tiled_map_loader::TiledMapLoader,
 };
 
 #[test]
@@ -262,7 +262,7 @@ struct TestData {
 }
 
 fn load_test_map(file_path: &str) -> Map<Option<u32>> {
-    let result = TiledMapConverter::load(file_path);
+    let result = TiledMapLoader::load(file_path);
     result.unwrap().map_layers[0].map.clone()
 }
 

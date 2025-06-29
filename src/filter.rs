@@ -5,7 +5,7 @@ use tiled::{Properties, PropertyValue};
 use crate::map::Map;
 use crate::map_segmenter;
 use crate::regen_error::RegenError;
-use crate::tiled_map_converter::TiledMapConverter;
+use crate::tiled_map_loader::TiledMapLoader;
 use crate::vector2::Vector2u;
 
 #[derive(Clone, PartialEq, Debug, Default)]
@@ -232,7 +232,7 @@ pub fn load_tiled_filters(
     file: &str,
     wildcard: Option<u32>,
 ) -> Result<FilterCollection<Option<u32>>, RegenError> {
-    let load_result = TiledMapConverter::load(file)?;
+    let load_result = TiledMapLoader::load(file)?;
     let mut filter_collection = FilterCollection::<Option<u32>>::default();
     for layer in &load_result.map_layers {
         let segments = map_segmenter::extract_segments(&layer.map, &None);

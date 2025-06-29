@@ -10,14 +10,8 @@ use xml::common::XmlVersion;
 use xml::writer::XmlEvent;
 use xml::EmitterConfig;
 
-pub struct TiledMapConverter {}
-
 pub struct TiledMapLayer {
     pub map: Map<Option<u32>>,
-}
-
-pub struct TiledPropertyLayer {
-    pub property_rects: Vec<TiledPropertyRect>,
 }
 
 pub struct TiledPropertyRect {
@@ -25,9 +19,8 @@ pub struct TiledPropertyRect {
     pub properties: FilterProperties,
 }
 
-pub struct TiledLoadResult {
-    pub map_layers: Vec<TiledMapLayer>,
-    pub property_layers: Vec<TiledPropertyLayer>,
+pub struct TiledPropertyLayer {
+    pub property_rects: Vec<TiledPropertyRect>,
 }
 
 impl TiledPropertyLayer {
@@ -47,6 +40,11 @@ impl TiledPropertyLayer {
     }
 }
 
+pub struct TiledLoadResult {
+    pub map_layers: Vec<TiledMapLayer>,
+    pub property_layers: Vec<TiledPropertyLayer>,
+}
+
 impl TiledLoadResult {
     pub fn get_properties_for_rects(
         &self,
@@ -62,7 +60,9 @@ impl TiledLoadResult {
     }
 }
 
-impl TiledMapConverter {
+pub struct TiledMapLoader {}
+
+impl TiledMapLoader {
     pub fn load(file: &str) -> Result<TiledLoadResult, RegenError> {
         let mut loader = Loader::new();
         let tmx_map = loader
@@ -230,7 +230,7 @@ mod tests {
 
     #[test]
     fn test_load() {
-        let result = TiledMapConverter::load(
+        let result = TiledMapLoader::load(
             format!("{}/{}", env!("CARGO_MANIFEST_DIR"), "data/3x3.tmx").as_str(),
         );
 
