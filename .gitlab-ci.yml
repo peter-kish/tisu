@@ -27,5 +27,11 @@ test:cargo:
 
 deploy:
   stage: deploy
-  script: echo "Define your deployment script!"
+  script:
+    - rustc --version && cargo --version  # Print version info for debugging
+    - cargo build --release
+  artifacts:
+    paths:
+      - target/release/regen
+      - target/release/refilter
   environment: production
