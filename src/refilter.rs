@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Parser;
 use regen::tiled_filter_loader::TiledFilterLoader;
 use regen::tiled_map_loader::TiledMapLoader;
@@ -6,14 +8,14 @@ use regen::tiled_map_loader::TiledMapLoader;
 #[command(version, about, long_about = None)]
 struct CmdLineArgs {
     /// Output file path
-    #[arg(short, long, default_value_t = String::from("output.tmx"))]
-    output: String,
+    #[arg(short, long, default_value = "output.tmx")]
+    output: PathBuf,
     /// Input file path
     #[arg(short, long)]
-    input: String,
+    input: PathBuf,
     /// Filters file path
     #[arg(short, long)]
-    filters: String,
+    filters: PathBuf,
 }
 
 fn main() {
@@ -25,10 +27,10 @@ fn main() {
         .apply(&load_result.map_layers[0].map)
         .expect("Failed to apply filters");
     TiledMapLoader::save(
-        args.output.as_str(),
+        &args.output,
         &new_map,
         (16, 16).into(),
-        "data/tileset.tsx",
+        &load_result.tileset_path,
     )
     .expect("Failed to save map");
 }

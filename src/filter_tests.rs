@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use crate::{
     filter::{Filter, FilterCollection},
     map::Map,
@@ -228,7 +230,7 @@ struct TestData {
     expected_output: Map<Option<u32>>,
 }
 
-fn load_test_map(file_path: &str) -> Map<Option<u32>> {
+fn load_test_map(file_path: impl AsRef<Path>) -> Map<Option<u32>> {
     let result = TiledMapLoader::load(file_path);
     result.unwrap().map_layers[0].map.clone()
 }

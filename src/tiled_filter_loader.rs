@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use crate::filter::{Filter, FilterCollection};
 use crate::map_segmenter;
 use crate::regen_error::RegenError;
@@ -7,7 +9,7 @@ pub struct TiledFilterLoader {}
 
 impl TiledFilterLoader {
     pub fn load(
-        file: &str,
+        file: impl AsRef<Path>,
         wildcard: Option<u32>,
     ) -> Result<FilterCollection<Option<u32>>, RegenError> {
         let load_result = TiledMapLoader::load(file)?;

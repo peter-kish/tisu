@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::path::{Path, PathBuf};
 
 use crate::filter::FilterProperties;
 use crate::map::Map;
@@ -43,6 +44,7 @@ impl TiledPropertyLayer {
 pub struct TiledLoadResult {
     pub map_layers: Vec<TiledMapLayer>,
     pub property_layers: Vec<TiledPropertyLayer>,
+    pub tileset_path: PathBuf,
 }
 
 impl TiledLoadResult {
@@ -63,7 +65,7 @@ impl TiledLoadResult {
 pub struct TiledMapLoader {}
 
 impl TiledMapLoader {
-    pub fn load(file: &str) -> Result<TiledLoadResult, RegenError> {
+    pub fn load(file: impl AsRef<Path>) -> Result<TiledLoadResult, RegenError> {
         let mut loader = Loader::new();
         let tmx_map = loader
             .load_tmx_map(file)
@@ -72,6 +74,7 @@ impl TiledMapLoader {
         let mut result = TiledLoadResult {
             map_layers: vec![],
             property_layers: vec![],
+            tileset_path: tmx_map.tilesets()[0].source.clone(),
         };
         let tile_size = Vector2u::new(tmx_map.tile_width, tmx_map.tile_height);
         for layer in tmx_map.layers() {
@@ -133,12 +136,11 @@ impl TiledMapLoader {
         Ok(result)
     }
 
-    // TODO: Test
     pub fn save(
-        file: &str,
+        file: impl AsRef<Path>,
         map: &Map<Option<u32>>,
         tile_size: Vector2u,
-        tileset_file: &str,
+        tileset_path: impl AsRef<Path>,
     ) -> Result<(), RegenError> {
         let target = File::create(file).expect("Failed to create file");
         let mut writer = EmitterConfig::new()
@@ -172,9 +174,10 @@ impl TiledMapLoader {
             .attr("nextobjectid", "1");
         writer.write(event).expect("Failed to start 'map' element");
 
+        let tileset_str = tileset_path.as_ref().display().to_string();
         let event = XmlEvent::start_element("tileset")
             .attr("firstgid", "1")
-            .attr("source", tileset_file);
+            .attr("source", &tileset_str);
         writer
             .write(event)
             .expect("Failed to start 'tileset' element");
@@ -249,4 +252,5 @@ mod tests {
     }
 
     // TODO: test_load_failure
+    // TODO: test_save
 }

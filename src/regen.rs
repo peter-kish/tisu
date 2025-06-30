@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use regen::map::Map;
 use regen::painter;
 use regen::rect2::Rect2u;
@@ -13,8 +15,8 @@ use rand::{random_range, Rng};
 #[command(version, about, long_about = None)]
 struct CmdLineArgs {
     /// Output file path
-    #[arg(short, long, default_value_t = String::from("output.png"))]
-    output: String,
+    #[arg(short, long)]
+    output: PathBuf,
     /// Output zoom level
     #[arg(short, long, default_value_t = 1)]
     zoom: u32,
