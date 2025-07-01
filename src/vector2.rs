@@ -1,4 +1,7 @@
-use std::ops::{Add, Sub};
+use std::{
+    num::TryFromIntError,
+    ops::{Add, Sub},
+};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Vector2<T> {
@@ -7,6 +10,7 @@ pub struct Vector2<T> {
 }
 
 pub type Vector2u = Vector2<u32>;
+pub type Vector2i = Vector2<i32>;
 
 impl<T> Default for Vector2<T>
 where
@@ -50,5 +54,25 @@ where
 {
     fn from(value: (T, T)) -> Self {
         Self::new(value.0, value.1)
+    }
+}
+
+impl TryFrom<Vector2u> for Vector2i {
+    type Error = TryFromIntError;
+    fn try_from(value: Vector2u) -> Result<Self, Self::Error> {
+        Ok(Vector2i::new(
+            i32::try_from(value.x)?,
+            i32::try_from(value.y)?,
+        ))
+    }
+}
+
+impl TryFrom<Vector2i> for Vector2u {
+    type Error = TryFromIntError;
+    fn try_from(value: Vector2i) -> Result<Self, Self::Error> {
+        Ok(Vector2u::new(
+            u32::try_from(value.x)?,
+            u32::try_from(value.y)?,
+        ))
     }
 }

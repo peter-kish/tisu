@@ -31,6 +31,16 @@ fn test_is_rect_start() {
     assert!(!map_segmenter::is_rect_start(&map, &0, (2, 1).into()));
     assert!(!map_segmenter::is_rect_start(&map, &0, (3, 1).into()));
     assert!(!map_segmenter::is_rect_start(&map, &0, (4, 1).into()));
+
+    // 1 1 0
+    // 0 0 0
+    let map = Map::<u32>::from_data([[1, 1, 0], [0, 0, 0]]).unwrap();
+    assert!(map_segmenter::is_rect_start(&map, &0, (0, 0).into()));
+
+    // 0 1 1
+    // 0 0 0
+    let map = Map::<u32>::from_data([[0, 1, 1], [0, 0, 0]]).unwrap();
+    assert!(map_segmenter::is_rect_start(&map, &0, (1, 0).into()));
 }
 
 #[test]

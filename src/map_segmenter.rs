@@ -1,7 +1,7 @@
 use crate::map::Map;
 use crate::rect2::Rect2u;
 use crate::regen_error::RegenError;
-use crate::vector2::Vector2u;
+use crate::vector2::{Vector2i, Vector2u};
 
 pub fn extract_segments<T>(map: &Map<T>, transparent_value: &T) -> Vec<Rect2u>
 where
@@ -26,10 +26,25 @@ pub fn is_field_transparent<T>(map: &Map<T>, transparent_value: &T, field: Vecto
 where
     T: PartialEq,
 {
+    let field2i = match Vector2i::try_from(field) {
+        Err(_) => return true, // Invalid (too large) value must be transparent
+        Ok(x) => x,
+    };
+    is_field_transparent_impl(map, transparent_value, field2i)
+}
+
+fn is_field_transparent_impl<T>(map: &Map<T>, transparent_value: &T, field: Vector2i) -> bool
+where
+    T: PartialEq,
+{
+    if field.x < 0 || field.y < 0 {
+        return true;
+    }
+
     let map_rect = Rect2u::from(map);
-    if !map_rect.contains_point(field) {
+    if !map_rect.contains_point((field.x as u32, field.y as u32).into()) {
         true
-    } else if let Ok(field_value) = map.get(field) {
+    } else if let Ok(field_value) = map.get((field.x as u32, field.y as u32).into()) {
         field_value == transparent_value
     } else {
         true
@@ -40,9 +55,13 @@ pub fn is_rect_start<T>(map: &Map<T>, transparent_value: &T, field: Vector2u) ->
 where
     T: PartialEq,
 {
-    !is_field_transparent(map, transparent_value, field)
-        && is_field_transparent(map, transparent_value, field - (1, 0).into())
-        && is_field_transparent(map, transparent_value, field - (0, 1).into())
+    let field2i = match Vector2i::try_from(field) {
+        Err(_) => return false, // Invalid (negative) value can't be rect start
+        Ok(x) => x,
+    };
+    !is_field_transparent_impl(map, transparent_value, field2i)
+        && is_field_transparent_impl(map, transparent_value, field2i - (1, 0).into())
+        && is_field_transparent_impl(map, transparent_value, field2i - (0, 1).into())
 }
 
 pub fn find_rect_start<T>(
