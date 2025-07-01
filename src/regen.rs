@@ -15,7 +15,7 @@ use rand::{random_range, Rng};
 #[command(version, about, long_about = None)]
 struct CmdLineArgs {
     /// Output file path
-    #[arg(short, long)]
+    #[arg(short, long, default_value = "output.png")]
     output: PathBuf,
     /// Output zoom level
     #[arg(short, long, default_value_t = 1)]
