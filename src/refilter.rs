@@ -1,8 +1,11 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use clap::Parser;
+use regen::regen_error::RegenError;
 use regen::tiled_filter_loader::TiledFilterLoader;
 use regen::tiled_map_loader::TiledMapLoader;
+use regen::vector2::Vector2u;
+use tiled::Loader;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -18,6 +21,14 @@ struct CmdLineArgs {
     filters: PathBuf,
 }
 
+fn load_tile_size(file: impl AsRef<Path>) -> Result<Vector2u, RegenError> {
+    let mut loader = Loader::new();
+    let tsx_tileset = loader
+        .load_tsx_tileset(file)
+        .map_err(|_| RegenError::InvalidArgument)?;
+    Ok((tsx_tileset.tile_width, tsx_tileset.tile_height).into())
+}
+
 fn main() {
     let args = CmdLineArgs::parse();
 
@@ -26,11 +37,7 @@ fn main() {
     let new_map = filters
         .apply(&load_result.map_layers[0].map)
         .expect("Failed to apply filters");
-    TiledMapLoader::save(
-        &args.output,
-        &new_map,
-        (16, 16).into(),
-        &load_result.tileset_path,
-    )
-    .expect("Failed to save map");
+    let tile_size = load_tile_size(&load_result.tileset_path).expect("Failed to load tileset");
+    TiledMapLoader::save(&args.output, &new_map, tile_size, &load_result.tileset_path)
+        .expect("Failed to save map");
 }
