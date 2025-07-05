@@ -36,9 +36,9 @@ fn test_pattern_matches() {
     let substitute = Map::<u32>::from_data([[1, 0]]).unwrap();
     let filter = Filter::new(pattern, substitute, 42).unwrap();
 
-    assert!(filter.pattern_matches(&map, (0, 0).into()));
-    assert!(!filter.pattern_matches(&map, (0, 1).into()));
-    assert!(!filter.pattern_matches(&map, (1, 1).into()));
+    assert!(filter.pattern_matches(&map, (0, 0).into(), &None));
+    assert!(!filter.pattern_matches(&map, (0, 1).into(), &None));
+    assert!(!filter.pattern_matches(&map, (1, 1).into(), &None));
 }
 
 #[test]
@@ -48,9 +48,9 @@ fn test_pattern_match_with_wildcard() {
     let substitute = Map::<u32>::from_data([[1, 0]]).unwrap();
     let filter = Filter::new(pattern, substitute, 2).unwrap();
 
-    assert!(filter.pattern_matches(&map, (0, 0).into()));
-    assert!(filter.pattern_matches(&map, (0, 1).into()));
-    assert!(!filter.pattern_matches(&map, (1, 1).into()));
+    assert!(filter.pattern_matches(&map, (0, 0).into(), &None));
+    assert!(filter.pattern_matches(&map, (0, 1).into(), &None));
+    assert!(!filter.pattern_matches(&map, (1, 1).into(), &None));
 }
 
 #[test]
@@ -60,10 +60,10 @@ fn test_substitute() {
     let substitute = Map::<u32>::from_data([[1, 0]]).unwrap();
     let filter = Filter::new(pattern, substitute, 42).unwrap();
 
-    filter.apply_substitute(&mut map, (0, 1).into());
+    filter.apply_substitute(&mut map, (0, 1).into(), &mut None);
     assert_eq!(map.data(), [1, 0, 1, 0]);
 
-    filter.apply_substitute(&mut map, (1, 0).into());
+    filter.apply_substitute(&mut map, (1, 0).into(), &mut None);
     assert_eq!(map.data(), [1, 1, 1, 0]);
 }
 
@@ -74,7 +74,7 @@ fn test_substitute_with_wildcard() {
     let substitute = Map::<u32>::from_data([[1, 2]]).unwrap();
     let filter = Filter::new(pattern, substitute, 2).unwrap();
 
-    filter.apply_substitute(&mut map, (0, 1).into());
+    filter.apply_substitute(&mut map, (0, 1).into(), &mut None);
     assert_eq!(map.data(), [1, 0, 1, 1]);
 }
 

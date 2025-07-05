@@ -1,11 +1,11 @@
 use std::path::PathBuf;
 
-use regen::map::Map;
 use regen::painter;
 use regen::rect2::Rect2u;
 use regen::rect2_utils;
 use regen::regen_error::RegenError;
 use regen::vector2::Vector2u;
+use regen::{map::Map, tiled_map_loader::TiledMapLoader};
 
 use clap::Parser;
 use image::{imageops, Rgb, RgbImage};
@@ -247,7 +247,7 @@ fn generate_map() -> Map<MapTile> {
     map
 }
 
-fn draw_map(map: Map<MapTile>, zoom: u32) -> RgbImage {
+fn draw_map(map: &Map<MapTile>, zoom: u32) -> RgbImage {
     let mut image = RgbImage::new(map.size().x, map.size().y);
     for x in 0..map.size().x {
         for y in 0..map.size().y {
@@ -263,10 +263,29 @@ fn draw_map(map: Map<MapTile>, zoom: u32) -> RgbImage {
     )
 }
 
+fn map_tile_to_tiled(map_tile: &MapTile) -> Option<u32> {
+    Some(match map_tile {
+        MapTile::Concrete => 3,
+        MapTile::Asphalt => 0,
+        MapTile::Grass => 10,
+        MapTile::Hedge => 11,
+        MapTile::Wall => 5,
+    })
+}
+
 fn main() {
     let args = CmdLineArgs::parse();
     let map = generate_map();
-    draw_map(map, args.zoom)
+    draw_map(&map, args.zoom)
         .save(args.output)
         .expect("Failed to save image");
+
+    let tiled_map = map.map(map_tile_to_tiled);
+    TiledMapLoader::save(
+        "output.tmx",
+        &tiled_map,
+        (32, 32).into(),
+        "/home/peter/coding/regen/data/tbzg_tileset.tsx",
+    )
+    .expect("Failed to save map");
 }

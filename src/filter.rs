@@ -24,10 +24,13 @@ impl TryFrom<&String> for ApplyTo {
     }
 }
 
+type ApplicationMap = Map<bool>;
+
 #[derive(Clone, PartialEq, Debug)]
 pub struct FilterProperties {
     probability: f32,
     apply_to: ApplyTo,
+    only_once: bool,
 }
 
 impl From<&Properties> for FilterProperties {
@@ -40,10 +43,15 @@ impl From<&Properties> for FilterProperties {
             Some(PropertyValue::StringValue(p)) => p.try_into().unwrap_or(ApplyTo::default()),
             _ => ApplyTo::Destination,
         };
+        let only_once = match value.get("only_once") {
+            Some(PropertyValue::BoolValue(p)) => *p,
+            _ => false,
+        };
 
         Self {
             probability,
             apply_to,
+            only_once,
         }
     }
 }
@@ -53,6 +61,7 @@ impl Default for FilterProperties {
         Self {
             probability: 1.0,
             apply_to: ApplyTo::Destination,
+            only_once: false,
         }
     }
 }
@@ -105,7 +114,12 @@ impl<T> Filter<T> {
         &self.substitute
     }
 
-    pub fn pattern_matches(&self, input: &Map<T>, position: Vector2u) -> bool
+    pub fn pattern_matches(
+        &self,
+        input: &Map<T>,
+        position: Vector2u,
+        application_map: &Option<ApplicationMap>,
+    ) -> bool
     where
         T: PartialEq,
     {
@@ -115,6 +129,9 @@ impl<T> Filter<T> {
         for x in 0..self.pattern.size().x {
             for y in 0..self.pattern.size().y {
                 let point = Vector2u::new(x, y);
+                if Self::already_applied(application_map, position + point) {
+                    return false;
+                }
                 if let Ok(input_field) = input.get(position + point) {
                     if let Ok(pattern_field) = self.pattern.get(point) {
                         if !self.fields_match(input_field, pattern_field) {
@@ -130,6 +147,16 @@ impl<T> Filter<T> {
         true
     }
 
+    fn already_applied(application_map: &Option<ApplicationMap>, point: Vector2u) -> bool {
+        match application_map {
+            None => false,
+            Some(application_map) => match application_map.get(point) {
+                Err(_) => false,
+                Ok(already_applied) => *already_applied,
+            },
+        }
+    }
+
     fn fields_match(&self, input_field: &T, pattern_field: &T) -> bool
     where
         T: PartialEq,
@@ -137,8 +164,12 @@ impl<T> Filter<T> {
         input_field == pattern_field || pattern_field == &self.wildcard
     }
 
-    pub fn apply_substitute(&self, input: &mut Map<T>, position: Vector2u)
-    where
+    pub fn apply_substitute(
+        &self,
+        input: &mut Map<T>,
+        position: Vector2u,
+        application_map: &mut Option<ApplicationMap>,
+    ) where
         T: Clone + PartialEq,
     {
         for x in 0..self.pattern.size().x {
@@ -146,6 +177,9 @@ impl<T> Filter<T> {
                 let point = Vector2u::new(x, y);
                 if let Ok(substitute_field) = self.substitute.get(point) {
                     self.substitute_field(input, position + point, substitute_field);
+                    if let Some(application_map) = application_map {
+                        _ = application_map.set(position + point, true);
+                    }
                 }
             }
         }
@@ -169,19 +203,32 @@ impl<T> Filter<T> {
             Err(RegenError::InvalidArgument)
         } else {
             let mut destination = map.clone();
+            let mut application_map = if self.properties.only_once {
+                Some(ApplicationMap::new(map.size()))
+            } else {
+                None
+            };
+
             for x in 0..=map.size().x - self.pattern().size().x {
                 for y in 0..=map.size().y - self.pattern().size().y {
                     let point = Vector2u::new(x, y);
                     match self.properties.apply_to {
-                        // TODO: Test different ApplyTo variants
                         ApplyTo::Destination => {
-                            if self.pattern_matches(map, point) {
-                                self.apply_substitute(&mut destination, point);
+                            if self.pattern_matches(map, point, &application_map) {
+                                self.apply_substitute(
+                                    &mut destination,
+                                    point,
+                                    &mut application_map,
+                                );
                             }
                         }
                         ApplyTo::Source => {
-                            if self.pattern_matches(&destination, point) {
-                                self.apply_substitute(&mut destination, point);
+                            if self.pattern_matches(&destination, point, &application_map) {
+                                self.apply_substitute(
+                                    &mut destination,
+                                    point,
+                                    &mut application_map,
+                                );
                             }
                         }
                     }
