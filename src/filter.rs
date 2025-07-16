@@ -77,7 +77,7 @@ pub struct Filter<T> {
 impl<T> Filter<T> {
     pub fn new(pattern: Map<T>, substitute: Map<T>, wildcard: T) -> Result<Self, RegenError> {
         if pattern.size() != substitute.size() {
-            Err(RegenError::InvalidArgument)
+            Err(RegenError::InvalidMapSize)
         } else {
             Ok(Self {
                 pattern,
@@ -95,7 +95,7 @@ impl<T> Filter<T> {
         properties: FilterProperties,
     ) -> Result<Self, RegenError> {
         if pattern.size() != substitute.size() {
-            Err(RegenError::InvalidArgument)
+            Err(RegenError::InvalidMapSize)
         } else {
             Ok(Self {
                 pattern,
@@ -200,7 +200,7 @@ impl<T> Filter<T> {
         T: Clone + PartialEq,
     {
         if map.size().x < self.pattern().size().x || map.size().y < self.pattern().size().y {
-            Err(RegenError::InvalidArgument)
+            Err(RegenError::InvalidMapSize)
         } else {
             let mut destination = map.clone();
             let mut application_map = if self.properties.only_once {
@@ -265,7 +265,11 @@ impl<T> FilterCollection<T> {
                 None => Some(filter.apply(map)?),
             };
         }
-        maybe_result.ok_or(RegenError::InvalidArgument)
+
+        match maybe_result {
+            None => Ok(map.clone()),
+            Some(result) => Ok(result),
+        }
     }
 
     pub fn push(&mut self, filter: Filter<T>) {

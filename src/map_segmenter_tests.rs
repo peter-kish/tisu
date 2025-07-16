@@ -65,7 +65,7 @@ fn test_find_rect_start_failure() {
 
     let result = map_segmenter::find_rect_start(&map, &0, (0, 0).into());
 
-    assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
+    assert_eq!(result.err().unwrap(), RegenError::NotFound);
 }
 
 #[test]

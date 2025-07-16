@@ -84,7 +84,7 @@ where
         it.x = 0;
     }
 
-    Err(RegenError::InvalidArgument)
+    Err(RegenError::NotFound)
 }
 
 pub fn find_rect_size<T>(map: &Map<T>, transparent_value: &T, field: Vector2u) -> Vector2u

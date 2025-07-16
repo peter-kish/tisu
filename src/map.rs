@@ -35,12 +35,8 @@ impl<T> Map<T> {
             }
             Ok(Self {
                 size: Vector2u::new(
-                    map_width
-                        .try_into()
-                        .map_err(|_| RegenError::InvalidArgument)?,
-                    map_height
-                        .try_into()
-                        .map_err(|_| RegenError::InvalidArgument)?,
+                    map_width.try_into().map_err(|_| RegenError::Unexpected)?,
+                    map_height.try_into().map_err(|_| RegenError::Unexpected)?,
                 ),
                 data: total_data,
             })

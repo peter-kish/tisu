@@ -16,14 +16,9 @@ impl TiledFilterLoader {
         let mut filter_collection = FilterCollection::<Option<u32>>::default();
         for layer in &load_result.map_layers {
             let segments = map_segmenter::extract_segments(&layer.map, &None);
-            if segments.is_empty() || segments.len() % 2 > 0 {
-                return Err(RegenError::InvalidArgument);
-            } else {
+            if !segments.is_empty() {
                 let mut idx = 0;
-                loop {
-                    if idx >= segments.len() {
-                        break;
-                    }
+                while idx < segments.len() - 1 {
                     let pattern_rect = segments[idx];
                     let substitute_rect = segments[idx + 1];
                     let pattern = layer.map.extract_segment(pattern_rect)?;

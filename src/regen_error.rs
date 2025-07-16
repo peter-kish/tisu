@@ -4,6 +4,9 @@ use std::{error::Error, fmt::Display};
 pub enum RegenError {
     OutOfBounds,
     InvalidArgument,
+    InvalidMapSize,
+    NotFound,
+    Unexpected,
 }
 
 impl Display for RegenError {
@@ -11,6 +14,9 @@ impl Display for RegenError {
         match self {
             RegenError::OutOfBounds => write!(f, "Out of map bounds"),
             RegenError::InvalidArgument => write!(f, "Invalid argument"),
+            RegenError::InvalidMapSize => write!(f, "Invalid map size"),
+            RegenError::NotFound => write!(f, "Not found"),
+            RegenError::Unexpected => write!(f, "Unexpected error"),
         }
     }
 }
