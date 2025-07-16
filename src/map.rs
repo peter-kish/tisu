@@ -3,13 +3,17 @@ use crate::regen_error::RegenError;
 use crate::vector2::Vector2u;
 use std::fmt::Display;
 
+/// A generic map
 #[derive(PartialEq, Debug, Clone)]
 pub struct Map<T> {
+    /// Size of the map
     size: Vector2u,
+    /// Vector containing map data
     data: Vec<T>,
 }
 
 impl<T> Map<T> {
+    /// Creates a map of a given size.
     pub fn new(size: Vector2u) -> Self
     where
         T: Clone + Default,
@@ -20,6 +24,11 @@ impl<T> Map<T> {
         }
     }
 
+    /// Creates a map of size M x N using the given map data.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the given data buffer is empty.
     pub fn from_data<const M: usize, const N: usize>(data: [[T; M]; N]) -> Result<Self, RegenError>
     where
         T: Clone,
@@ -43,18 +52,26 @@ impl<T> Map<T> {
         }
     }
 
+    /// Returns the size of the map.
     pub fn size(&self) -> Vector2u {
         self.size
     }
 
+    /// Returns a reference to the map data.
     pub fn data(&self) -> &[T] {
         self.data.as_slice()
     }
 
+    /// Returns a mutable reference to the map data.
     pub fn mut_data(&mut self) -> &mut [T] {
         self.data.as_mut_slice()
     }
 
+    /// Returns the value of the field at the given position.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the given position is out of map bounds.
     pub fn get(&self, point: Vector2u) -> Result<&T, RegenError> {
         if point.x >= self.size().x || point.y >= self.size().y {
             Err(RegenError::OutOfBounds)
@@ -64,6 +81,11 @@ impl<T> Map<T> {
         }
     }
 
+    /// Sets the field at the given position to the given value.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the given position is out of map bounds.
     pub fn set(&mut self, point: Vector2u, value: T) -> Result<(), RegenError> {
         if point.x >= self.size().x || point.y >= self.size().y {
             Err(RegenError::OutOfBounds)
@@ -78,6 +100,7 @@ impl<T> Map<T> {
         (point.y * self.size.x + point.x).try_into().unwrap()
     }
 
+    /// Maps the field values to type G using the given mapper.
     pub fn map<G, F>(&self, mapper: F) -> Map<G>
     where
         G: Clone + Default,
@@ -89,6 +112,11 @@ impl<T> Map<T> {
         }
     }
 
+    /// Extracts a rectangular segment of the map as a separate map.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the given rectangle exceeds map bounds.
     pub fn extract_segment(&self, segment_rect: Rect2u) -> Result<Map<T>, RegenError>
     where
         T: Clone + Default,
@@ -108,6 +136,7 @@ impl<T> Map<T> {
         }
     }
 
+    /// Prints the map to stdout.
     pub fn print(&self)
     where
         T: Display,

@@ -3,9 +3,12 @@ use std::{
     ops::{Add, Sub},
 };
 
+/// A generic 2d vector
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Vector2<T> {
+    /// X coordinate of the vector
     pub x: T,
+    /// Y coordinate of the vector
     pub y: T,
 }
 
@@ -36,10 +39,12 @@ impl<T: Sub<Output = T>> Sub for Vector2<T> {
 }
 
 impl<T> Vector2<T> {
+    /// Creates a vector with the given coordinates.
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
 
+    /// Creates a unit vector.
     pub fn one() -> Self
     where
         T: From<u16>,
