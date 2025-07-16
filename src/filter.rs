@@ -6,6 +6,8 @@ use crate::map::Map;
 use crate::regen_error::RegenError;
 use crate::vector2::Vector2u;
 
+/// Filter property that defines where the filter will be applied (source or
+/// destination)
 #[derive(Clone, PartialEq, Debug, Default)]
 pub enum ApplyTo {
     #[default]
@@ -26,10 +28,17 @@ impl TryFrom<&String> for ApplyTo {
 
 type ApplicationMap = Map<bool>;
 
+/// Filter properties.
 #[derive(Clone, PartialEq, Debug)]
 pub struct FilterProperties {
+    /// Probability of the filter being applied on each pattern match (clamped
+    /// to range [0..1]).
     probability: f32,
+    /// Defines where the filter will be applied (source or destination).
     apply_to: ApplyTo,
+    /// If true, the filter will be applied only once per field. Once a filter
+    /// has been applied to a field, that field will not result in any further
+    /// pattern matches.
     only_once: bool,
 }
 
@@ -66,15 +75,29 @@ impl Default for FilterProperties {
     }
 }
 
+/// Map filter
 #[derive(Clone, PartialEq, Debug)]
 pub struct Filter<T> {
+    /// Defines to which fields the substitute will be applied to.
     pattern: Map<T>,
+    /// Applied to fields that match the filter pattern.
     substitute: Map<T>,
+    /// Field value that represents a wildcard, which can affect pattern
+    /// matching and substitute application.
     wildcard: T,
+    /// Filter properties that can affect pattern matching or substitute
+    /// application.
     properties: FilterProperties,
 }
 
 impl<T> Filter<T> {
+    /// Creates a filter with the given pattern map, substitute map and wildcard
+    /// value.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the given pattern and substitute don't have equal
+    /// sizes.
     pub fn new(pattern: Map<T>, substitute: Map<T>, wildcard: T) -> Result<Self, RegenError> {
         if pattern.size() != substitute.size() {
             Err(RegenError::InvalidMapSize)
@@ -88,6 +111,13 @@ impl<T> Filter<T> {
         }
     }
 
+    /// Creates a filter with the given pattern map, substitute map, wildcard
+    /// value and filter properties.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the given pattern and substitute don't have equal
+    /// sizes.
     pub fn new_with_properties(
         pattern: Map<T>,
         substitute: Map<T>,
@@ -106,14 +136,19 @@ impl<T> Filter<T> {
         }
     }
 
+    /// Returns the filter pattern map.
     pub fn pattern(&self) -> &Map<T> {
         &self.pattern
     }
 
+    /// Returns the filter substitute map.
     pub fn substitute(&self) -> &Map<T> {
         &self.substitute
     }
 
+    /// Checks if the filter pattern matches at the given position in the given
+    /// input map. Optionally, an application map can be used which defines the
+    /// fields where the filter has already been applied.
     pub fn pattern_matches(
         &self,
         input: &Map<T>,
@@ -164,6 +199,9 @@ impl<T> Filter<T> {
         input_field == pattern_field || pattern_field == &self.wildcard
     }
 
+    /// Applies the filter substitute to the given input map at the given
+    /// position. Optionally, an application map can be used to mark the fields
+    /// where the substitute has been applied.
     pub fn apply_substitute(
         &self,
         input: &mut Map<T>,
@@ -194,6 +232,12 @@ impl<T> Filter<T> {
         }
     }
 
+    /// Applies the filter to the given map.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if map size is smaller than that of the pattern or
+    /// substitute maps.
     pub fn apply(&self, map: &Map<T>) -> Result<Map<T>, RegenError>
     where
         Map<T>: Clone,
@@ -244,7 +288,9 @@ pub struct FilterCollection<T> {
     pub filters: Vec<Filter<T>>,
 }
 
+/// A collection of map filters
 impl<T> FilterCollection<T> {
+    /// Creates a filter collection from the given array of filters.
     pub fn new(filters: &[Filter<T>]) -> Self
     where
         Filter<T>: Clone,
@@ -254,6 +300,12 @@ impl<T> FilterCollection<T> {
         }
     }
 
+    /// Applies all the filters from the collection to the given map.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any of the filters from the collection can't be
+    /// applied to the map.
     pub fn apply(&self, map: &Map<T>) -> Result<Map<T>, RegenError>
     where
         T: Clone + PartialEq,
