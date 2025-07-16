@@ -2,6 +2,12 @@ use crate::rect2::Rect2u;
 use crate::regen_error::RegenError;
 use crate::vector2::{Vector2, Vector2u};
 
+/// Splits the given rectangle into two horizontally at the given height and
+/// returns the two newly created rectangles.
+///
+/// # Errors
+///
+/// Returns an error if the rectangle cannot be split at the given height.
 pub fn h_split_rect(rect: Rect2u, height: u32) -> Result<(Rect2u, Rect2u), RegenError> {
     if height == 0 || height >= rect.size().y {
         return Err(RegenError::InvalidArgument);
@@ -20,6 +26,12 @@ pub fn h_split_rect(rect: Rect2u, height: u32) -> Result<(Rect2u, Rect2u), Regen
     ))
 }
 
+/// Splits the given rectangle into two vertically at the given width and
+/// returns the two newly created rectangles.
+///
+/// # Errors
+///
+/// Returns an error if the rectangle cannot be split at the given width.
 pub fn v_split_rect(rect: Rect2u, width: u32) -> Result<(Rect2u, Rect2u), RegenError> {
     if width == 0 || width >= rect.size().x {
         return Err(RegenError::InvalidArgument);
@@ -38,6 +50,12 @@ pub fn v_split_rect(rect: Rect2u, width: u32) -> Result<(Rect2u, Rect2u), RegenE
     ))
 }
 
+/// Returns a sub-rectangle of the given rectangle that is above the given y
+/// coordinate.
+///
+/// # Errors
+///
+/// Returns an error if the given y coordinate is out of rectangle bounds.
 pub fn get_rect_above(rect: &Rect2u, y: u32) -> Result<Option<Rect2u>, RegenError> {
     if y > rect.size().y - 1 {
         Err(RegenError::OutOfBounds)
@@ -49,6 +67,12 @@ pub fn get_rect_above(rect: &Rect2u, y: u32) -> Result<Option<Rect2u>, RegenErro
     }
 }
 
+/// Returns a sub-rectangle of the given rectangle that is left of the given x
+/// coordinate.
+///
+/// # Errors
+///
+/// Returns an error if the given x coordinate is out of rectangle bounds.
 pub fn get_rect_left(rect: &Rect2u, x: u32) -> Result<Option<Rect2u>, RegenError> {
     if x > rect.size().x - 1 {
         Err(RegenError::OutOfBounds)
@@ -60,6 +84,12 @@ pub fn get_rect_left(rect: &Rect2u, x: u32) -> Result<Option<Rect2u>, RegenError
     }
 }
 
+/// Returns a sub-rectangle of the given rectangle that is below the given y
+/// coordinate.
+///
+/// # Errors
+///
+/// Returns an error if the given y coordinate is out of rectangle bounds.
 pub fn get_rect_below(rect: &Rect2u, y: u32) -> Result<Option<Rect2u>, RegenError> {
     match y {
         _ if y > rect.size().y - 1 => Err(RegenError::OutOfBounds),
@@ -72,6 +102,12 @@ pub fn get_rect_below(rect: &Rect2u, y: u32) -> Result<Option<Rect2u>, RegenErro
     }
 }
 
+/// Returns a sub-rectangle of the given rectangle that is right of the given x
+/// coordinate.
+///
+/// # Errors
+///
+/// Returns an error if the given x coordinate is out of rectangle bounds.
 pub fn get_rect_right(rect: &Rect2u, x: u32) -> Result<Option<Rect2u>, RegenError> {
     match x {
         _ if x > rect.size().x - 1 => Err(RegenError::OutOfBounds),
