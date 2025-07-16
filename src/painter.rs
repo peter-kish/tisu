@@ -4,6 +4,12 @@ use crate::rect2_utils;
 use crate::regen_error::RegenError;
 use crate::vector2::{Vector2, Vector2u};
 
+/// Splits the given map into two horizontally at the given height and returns
+/// the two resulting rectangles.
+///
+/// # Errors
+///
+/// Returns an error if the map cannot be split at the given height.
 pub fn h_split<T>(map: &Map<T>, height: u32) -> Result<(Rect2u, Rect2u), RegenError> {
     rect2_utils::h_split_rect(
         (0, 0, map.size().x, map.size().y).try_into().unwrap(),
@@ -11,6 +17,12 @@ pub fn h_split<T>(map: &Map<T>, height: u32) -> Result<(Rect2u, Rect2u), RegenEr
     )
 }
 
+/// Splits the given map into two vertically at the given width and returns
+/// the two resulting rectangles.
+///
+/// # Errors
+///
+/// Returns an error if the map cannot be split at the given width.
 pub fn v_split<T>(map: &Map<T>, width: u32) -> Result<(Rect2u, Rect2u), RegenError> {
     rect2_utils::v_split_rect(
         (0, 0, map.size().x, map.size().y).try_into().unwrap(),
@@ -18,6 +30,7 @@ pub fn v_split<T>(map: &Map<T>, width: u32) -> Result<(Rect2u, Rect2u), RegenErr
     )
 }
 
+/// Fills the map with the given value.
 pub fn fill<T>(map: &mut Map<T>, value: T)
 where
     T: Clone,
@@ -27,6 +40,11 @@ where
     }
 }
 
+/// Fills the given rectangle on the given map with the given value.
+///
+/// # Errors
+///
+/// Returns an error if the rectangle exceeds the map bounds.
 pub fn fill_rect<T>(map: &mut Map<T>, rect: &Rect2u, value: T) -> Result<(), RegenError>
 where
     T: Clone,
@@ -48,6 +66,12 @@ where
     Ok(())
 }
 
+/// Draws the border of the given rectangle on the given map with the given
+/// value. Returns the rectangle within the border, if possible.
+///
+/// # Errors
+///
+/// Returns an error if the rectangle exceeds the map bounds.
 pub fn border_rect<T>(
     map: &mut Map<T>,
     rect: &Rect2u,
@@ -79,6 +103,13 @@ where
     }
 }
 
+/// Draws a horizontal line on the given map, at the given y coordinate and with
+/// the given value. Returns the rectangles above and below the drawn line, if
+/// possible.
+///
+/// # Errors
+///
+/// Returns an error if the y coordinate is outside map bounds.
 pub fn h_line<T>(
     map: &mut Map<T>,
     y: u32,
@@ -90,6 +121,13 @@ where
     h_line_rect(map, &Rect2::new(Vector2::default(), map.size())?, y, value)
 }
 
+/// Draws a horizontal line on the given map, within the given rectangle, at the
+/// given y coordinate and with the given value. Returns the sub-rectangles
+/// above and below the drawn line, if possible.
+///
+/// # Errors
+///
+/// Returns an error if the y coordinate or the rectangle is outside map bounds.
 pub fn h_line_rect<T>(
     map: &mut Map<T>,
     rect: &Rect2u,
@@ -125,6 +163,13 @@ where
     }
 }
 
+/// Draws a vertical line on the given map, at the given x coordinate and with
+/// the given value. Returns the rectangles left and right of the drawn line, if
+/// possible.
+///
+/// # Errors
+///
+/// Returns an error if the x coordinate is outside map bounds.
 pub fn v_line<T>(
     map: &mut Map<T>,
     x: u32,
@@ -136,6 +181,13 @@ where
     v_line_rect(map, &Rect2::new(Vector2::default(), map.size())?, x, value)
 }
 
+/// Draws a vertical line on the given map, within the given rectangle, at the
+/// given x coordinate and with the given value. Returns the sub-rectangles
+/// left and right of the drawn line, if possible.
+///
+/// # Errors
+///
+/// Returns an error if the x coordinate or the rectangle is outside map bounds.
 pub fn v_line_rect<T>(
     map: &mut Map<T>,
     rect: &Rect2u,
