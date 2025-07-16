@@ -3,6 +3,8 @@ use crate::rect2::Rect2u;
 use crate::regen_error::RegenError;
 use crate::vector2::{Vector2i, Vector2u};
 
+/// Returns a vector of rectangles in the given map separated by transparent
+/// fields.
 pub fn extract_segments<T>(map: &Map<T>, transparent_value: &T) -> Vec<Rect2u>
 where
     T: PartialEq,
@@ -22,6 +24,7 @@ where
     result
 }
 
+/// Checks if the field of the given map at the given coordinates is transparent.
 pub fn is_field_transparent<T>(map: &Map<T>, transparent_value: &T, field: Vector2u) -> bool
 where
     T: PartialEq,
@@ -51,6 +54,8 @@ where
     }
 }
 
+/// Checks if the field of the given map at the given coordinates is the start
+/// of a rectangle.
 pub fn is_rect_start<T>(map: &Map<T>, transparent_value: &T, field: Vector2u) -> bool
 where
     T: PartialEq,
@@ -64,6 +69,8 @@ where
         && is_field_transparent_impl(map, transparent_value, field2i - (0, 1).into())
 }
 
+/// Returns the starting coordinates of the first rectangle, starting from
+/// top-left.
 pub fn find_rect_start<T>(
     map: &Map<T>,
     transparent_value: &T,
@@ -87,6 +94,7 @@ where
     Err(RegenError::NotFound)
 }
 
+/// Returns the size of the rectangle that starts at the given coordinates.
 pub fn find_rect_size<T>(map: &Map<T>, transparent_value: &T, field: Vector2u) -> Vector2u
 where
     T: PartialEq,

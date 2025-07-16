@@ -283,12 +283,12 @@ impl<T> Filter<T> {
     }
 }
 
+/// A collection of map filters
 #[derive(Default)]
 pub struct FilterCollection<T> {
     pub filters: Vec<Filter<T>>,
 }
 
-/// A collection of map filters
 impl<T> FilterCollection<T> {
     /// Creates a filter collection from the given array of filters.
     pub fn new(filters: &[Filter<T>]) -> Self
