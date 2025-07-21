@@ -1,7 +1,7 @@
 use crate::map::Map;
 use crate::map_segmenter;
 use crate::rect2::Rect2u;
-use crate::regen_error::RegenError;
+use crate::tisu_error::TisuError;
 
 #[test]
 fn test_is_field_transparent() {
@@ -65,7 +65,7 @@ fn test_find_rect_start_failure() {
 
     let result = map_segmenter::find_rect_start(&map, &0, (0, 0).into());
 
-    assert_eq!(result.err().unwrap(), RegenError::NotFound);
+    assert_eq!(result.err().unwrap(), TisuError::NotFound);
 }
 
 #[test]

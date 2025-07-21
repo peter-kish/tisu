@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use crate::filter::FilterProperties;
 use crate::map::Map;
 use crate::rect2::Rect2u;
-use crate::regen_error::RegenError;
+use crate::tisu_error::TisuError;
 use crate::vector2::Vector2u;
 use tiled::Loader;
 use xml::common::XmlVersion;
@@ -52,7 +52,7 @@ impl TiledLoadResult {
         &self,
         rect1: Rect2u,
         rect2: Rect2u,
-    ) -> Result<FilterProperties, RegenError> {
+    ) -> Result<FilterProperties, TisuError> {
         for property_layer in &self.property_layers {
             if let Some(properties) = property_layer.get_properties_for_rects(rect1, rect2) {
                 return Ok(properties);
@@ -65,11 +65,11 @@ impl TiledLoadResult {
 pub struct TiledMapLoader {}
 
 impl TiledMapLoader {
-    pub fn load(file: impl AsRef<Path>) -> Result<TiledLoadResult, RegenError> {
+    pub fn load(file: impl AsRef<Path>) -> Result<TiledLoadResult, TisuError> {
         let mut loader = Loader::new();
         let tmx_map = loader
             .load_tmx_map(file)
-            .map_err(|_| RegenError::InvalidArgument)?;
+            .map_err(|_| TisuError::InvalidArgument)?;
 
         let mut result = TiledLoadResult {
             map_layers: vec![],
@@ -96,7 +96,7 @@ impl TiledMapLoader {
 
     fn load_finite_tile_layer(
         layer: &tiled::FiniteTileLayer,
-    ) -> Result<Map<Option<u32>>, RegenError> {
+    ) -> Result<Map<Option<u32>>, TisuError> {
         let mut map = Map::<Option<u32>>::new((layer.width(), layer.height()).into());
         for x in 0..layer.width() {
             for y in 0..layer.height() {
@@ -114,7 +114,7 @@ impl TiledMapLoader {
     fn load_object_layer(
         layer: &tiled::ObjectLayer,
         tile_size: Vector2u,
-    ) -> Result<TiledPropertyLayer, RegenError> {
+    ) -> Result<TiledPropertyLayer, TisuError> {
         let mut result = TiledPropertyLayer {
             property_rects: vec![],
         };
@@ -141,7 +141,7 @@ impl TiledMapLoader {
         map: &Map<Option<u32>>,
         tile_size: Vector2u,
         tileset_path: impl AsRef<Path>,
-    ) -> Result<(), RegenError> {
+    ) -> Result<(), TisuError> {
         let target = File::create(file).expect("Failed to create file");
         let mut writer = EmitterConfig::new()
             .perform_indent(true)

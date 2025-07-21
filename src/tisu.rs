@@ -1,11 +1,11 @@
 use std::path::{Path, PathBuf};
 
 use clap::Parser;
-use regen::regen_error::RegenError;
-use regen::tiled_filter_loader::TiledFilterLoader;
-use regen::tiled_map_loader::TiledMapLoader;
-use regen::vector2::Vector2u;
 use tiled::Loader;
+use tisu::tiled_filter_loader::TiledFilterLoader;
+use tisu::tiled_map_loader::TiledMapLoader;
+use tisu::tisu_error::TisuError;
+use tisu::vector2::Vector2u;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -21,11 +21,11 @@ struct CmdLineArgs {
     filters: PathBuf,
 }
 
-fn load_tile_size(file: impl AsRef<Path>) -> Result<Vector2u, RegenError> {
+fn load_tile_size(file: impl AsRef<Path>) -> Result<Vector2u, TisuError> {
     let mut loader = Loader::new();
     let tsx_tileset = loader
         .load_tsx_tileset(file)
-        .map_err(|_| RegenError::InvalidArgument)?;
+        .map_err(|_| TisuError::InvalidArgument)?;
     Ok((tsx_tileset.tile_width, tsx_tileset.tile_height).into())
 }
 

@@ -1,6 +1,6 @@
 use std::ops::{Add, Sub};
 
-use crate::{regen_error::RegenError, vector2::Vector2};
+use crate::{tisu_error::TisuError, vector2::Vector2};
 
 /// A generic 2d rectangle
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -19,12 +19,12 @@ impl<T> Rect2<T> {
     /// # Errors
     ///
     /// Returns an error if the given size contains negative coordinates.
-    pub fn new(position: Vector2<T>, size: Vector2<T>) -> Result<Self, RegenError>
+    pub fn new(position: Vector2<T>, size: Vector2<T>) -> Result<Self, TisuError>
     where
         T: PartialOrd + From<u16>,
     {
         if size.x < 0.into() || size.y < 0.into() {
-            return Err(RegenError::InvalidArgument);
+            return Err(TisuError::InvalidArgument);
         }
         Ok(Self { position, size })
     }
@@ -70,7 +70,7 @@ impl<T> TryFrom<(T, T, T, T)> for Rect2<T>
 where
     T: PartialOrd + std::convert::From<u16>,
 {
-    type Error = RegenError;
+    type Error = TisuError;
 
     fn try_from(value: (T, T, T, T)) -> Result<Self, Self::Error> {
         let position = Vector2::new(value.0, value.1);

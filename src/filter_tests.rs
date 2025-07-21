@@ -3,9 +3,9 @@ use std::path::Path;
 use crate::{
     filter::{Filter, FilterCollection},
     map::Map,
-    regen_error::RegenError,
     tiled_filter_loader::TiledFilterLoader,
     tiled_map_loader::TiledMapLoader,
+    tisu_error::TisuError,
 };
 
 #[test]
@@ -26,7 +26,7 @@ fn test_constructor_failure() {
     let substitute = Map::<u32>::new((3, 2).into());
     let result = Filter::new(pattern, substitute, 42);
 
-    assert_eq!(result.err().unwrap(), RegenError::InvalidMapSize);
+    assert_eq!(result.err().unwrap(), TisuError::InvalidMapSize);
 }
 
 #[test]
@@ -116,7 +116,7 @@ fn test_apply_filter_failure() {
 
     let result = filter.apply(&map);
 
-    assert_eq!(result.err().unwrap(), RegenError::InvalidMapSize);
+    assert_eq!(result.err().unwrap(), TisuError::InvalidMapSize);
 }
 
 #[test]
@@ -229,7 +229,7 @@ fn test_apply_filter_collection_failure() {
 
     let result = filter_collection.apply(&map);
 
-    assert_eq!(result.err().unwrap(), RegenError::InvalidMapSize);
+    assert_eq!(result.err().unwrap(), TisuError::InvalidMapSize);
 }
 
 #[test]

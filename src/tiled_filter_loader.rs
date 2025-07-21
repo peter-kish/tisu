@@ -2,8 +2,8 @@ use std::path::Path;
 
 use crate::filter::{Filter, FilterCollection};
 use crate::map_segmenter;
-use crate::regen_error::RegenError;
 use crate::tiled_map_loader::TiledMapLoader;
+use crate::tisu_error::TisuError;
 
 pub struct TiledFilterLoader {}
 
@@ -11,7 +11,7 @@ impl TiledFilterLoader {
     pub fn load(
         file: impl AsRef<Path>,
         wildcard: Option<u32>,
-    ) -> Result<FilterCollection<Option<u32>>, RegenError> {
+    ) -> Result<FilterCollection<Option<u32>>, TisuError> {
         let load_result = TiledMapLoader::load(file)?;
         let mut filter_collection = FilterCollection::<Option<u32>>::default();
         for layer in &load_result.map_layers {

@@ -1,4 +1,4 @@
-use crate::{rect2::Rect2, regen_error::RegenError, vector2::Vector2};
+use crate::{rect2::Rect2, tisu_error::TisuError, vector2::Vector2};
 
 #[test]
 fn test_constructor_success() {
@@ -19,7 +19,7 @@ fn test_constructor_failure() {
 
     let result = Rect2::<i32>::new(position, size);
 
-    assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
+    assert_eq!(result.err().unwrap(), TisuError::InvalidArgument);
 }
 
 #[test]
@@ -35,7 +35,7 @@ fn test_from() {
 fn test_from_failure() {
     let result = Rect2::<i32>::try_from((1, 2, -3, -4));
 
-    assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
+    assert_eq!(result.err().unwrap(), TisuError::InvalidArgument);
 }
 
 #[test]

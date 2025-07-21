@@ -1,4 +1,4 @@
-use crate::{map::Map, regen_error::RegenError, vector2::Vector2u};
+use crate::{map::Map, tisu_error::TisuError, vector2::Vector2u};
 
 #[test]
 fn test_constructor() {
@@ -32,7 +32,7 @@ fn test_from_data_success() {
 fn test_from_data_failure() {
     let result = Map::<i32>::from_data::<0, 0>([]);
 
-    assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
+    assert_eq!(result.err().unwrap(), TisuError::InvalidArgument);
 }
 
 #[test]
@@ -51,7 +51,7 @@ fn test_get_failure() {
 
     let value = map.get((10, 10).into());
 
-    assert_eq!(value.err().unwrap(), RegenError::OutOfBounds);
+    assert_eq!(value.err().unwrap(), TisuError::OutOfBounds);
 }
 
 #[test]
@@ -73,7 +73,7 @@ fn test_set_failure() {
 
     let result = map.set(point, 42);
 
-    assert_eq!(result.err().unwrap(), RegenError::OutOfBounds);
+    assert_eq!(result.err().unwrap(), TisuError::OutOfBounds);
 }
 
 #[test]
@@ -118,5 +118,5 @@ fn test_extract_segment_failure() {
 
     let result = map.extract_segment((3, 3, 2, 2).try_into().unwrap());
 
-    assert_eq!(result.err().unwrap(), RegenError::InvalidArgument);
+    assert_eq!(result.err().unwrap(), TisuError::InvalidArgument);
 }

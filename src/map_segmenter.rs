@@ -1,6 +1,6 @@
 use crate::map::Map;
 use crate::rect2::Rect2u;
-use crate::regen_error::RegenError;
+use crate::tisu_error::TisuError;
 use crate::vector2::{Vector2i, Vector2u};
 
 /// Returns a vector of rectangles in the given map separated by transparent
@@ -75,7 +75,7 @@ pub fn find_rect_start<T>(
     map: &Map<T>,
     transparent_value: &T,
     from: Vector2u,
-) -> Result<Vector2u, RegenError>
+) -> Result<Vector2u, TisuError>
 where
     T: PartialEq,
 {
@@ -91,7 +91,7 @@ where
         it.x = 0;
     }
 
-    Err(RegenError::NotFound)
+    Err(TisuError::NotFound)
 }
 
 /// Returns the size of the rectangle that starts at the given coordinates.

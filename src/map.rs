@@ -1,5 +1,5 @@
 use crate::rect2::Rect2u;
-use crate::regen_error::RegenError;
+use crate::tisu_error::TisuError;
 use crate::vector2::Vector2u;
 use std::fmt::Display;
 
@@ -29,12 +29,12 @@ impl<T> Map<T> {
     /// # Errors
     ///
     /// Returns an error if the given data buffer is empty.
-    pub fn from_data<const M: usize, const N: usize>(data: [[T; M]; N]) -> Result<Self, RegenError>
+    pub fn from_data<const M: usize, const N: usize>(data: [[T; M]; N]) -> Result<Self, TisuError>
     where
         T: Clone,
     {
         if data.is_empty() {
-            Err(RegenError::InvalidArgument)
+            Err(TisuError::InvalidArgument)
         } else {
             let map_width = data[0].len();
             let map_height = data.len();
@@ -44,8 +44,8 @@ impl<T> Map<T> {
             }
             Ok(Self {
                 size: Vector2u::new(
-                    map_width.try_into().map_err(|_| RegenError::Unexpected)?,
-                    map_height.try_into().map_err(|_| RegenError::Unexpected)?,
+                    map_width.try_into().map_err(|_| TisuError::Unexpected)?,
+                    map_height.try_into().map_err(|_| TisuError::Unexpected)?,
                 ),
                 data: total_data,
             })
@@ -72,12 +72,12 @@ impl<T> Map<T> {
     /// # Errors
     ///
     /// Returns an error if the given position is out of map bounds.
-    pub fn get(&self, point: Vector2u) -> Result<&T, RegenError> {
+    pub fn get(&self, point: Vector2u) -> Result<&T, TisuError> {
         if point.x >= self.size().x || point.y >= self.size().y {
-            Err(RegenError::OutOfBounds)
+            Err(TisuError::OutOfBounds)
         } else {
             let idx = self.idx(point);
-            self.data.get(idx).ok_or(RegenError::OutOfBounds)
+            self.data.get(idx).ok_or(TisuError::OutOfBounds)
         }
     }
 
@@ -86,12 +86,12 @@ impl<T> Map<T> {
     /// # Errors
     ///
     /// Returns an error if the given position is out of map bounds.
-    pub fn set(&mut self, point: Vector2u, value: T) -> Result<(), RegenError> {
+    pub fn set(&mut self, point: Vector2u, value: T) -> Result<(), TisuError> {
         if point.x >= self.size().x || point.y >= self.size().y {
-            Err(RegenError::OutOfBounds)
+            Err(TisuError::OutOfBounds)
         } else {
             let idx = self.idx(point);
-            *(self.data.get_mut(idx).ok_or(RegenError::OutOfBounds)?) = value;
+            *(self.data.get_mut(idx).ok_or(TisuError::OutOfBounds)?) = value;
             Ok(())
         }
     }
@@ -117,7 +117,7 @@ impl<T> Map<T> {
     /// # Errors
     ///
     /// Returns an error if the given rectangle exceeds map bounds.
-    pub fn extract_segment(&self, segment_rect: Rect2u) -> Result<Map<T>, RegenError>
+    pub fn extract_segment(&self, segment_rect: Rect2u) -> Result<Map<T>, TisuError>
     where
         T: Clone + Default,
     {
@@ -132,7 +132,7 @@ impl<T> Map<T> {
             }
             Ok(segment)
         } else {
-            Err(RegenError::InvalidArgument)
+            Err(TisuError::InvalidArgument)
         }
     }
 

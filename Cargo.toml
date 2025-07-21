@@ -1,23 +1,18 @@
 [package]
-name = "regen"
+name = "tisu"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "regen"
-path = "src/regen.rs"
-
-[[bin]]
-name = "refilter"
-path = "src/refilter.rs"
+name = "tisu"
+path = "src/tisu.rs"
 
 [lib]
-name = "regen"
+name = "tisu"
 path = "src/lib.rs"
 
 [dependencies]
 clap = { version = "4.5.38", features = ["derive"] }
-image = "0.25.6"
 rand = "0.9.1"
 tiled = "0.14.0"
 xml-rs = "0.8.26"

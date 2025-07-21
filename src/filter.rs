@@ -3,7 +3,7 @@ use rand::Rng;
 use tiled::{Properties, PropertyValue};
 
 use crate::map::Map;
-use crate::regen_error::RegenError;
+use crate::tisu_error::TisuError;
 use crate::vector2::Vector2u;
 
 /// Filter property that defines where the filter will be applied (source or
@@ -98,9 +98,9 @@ impl<T> Filter<T> {
     ///
     /// Returns an error if the given pattern and substitute don't have equal
     /// sizes.
-    pub fn new(pattern: Map<T>, substitute: Map<T>, wildcard: T) -> Result<Self, RegenError> {
+    pub fn new(pattern: Map<T>, substitute: Map<T>, wildcard: T) -> Result<Self, TisuError> {
         if pattern.size() != substitute.size() {
-            Err(RegenError::InvalidMapSize)
+            Err(TisuError::InvalidMapSize)
         } else {
             Ok(Self {
                 pattern,
@@ -123,9 +123,9 @@ impl<T> Filter<T> {
         substitute: Map<T>,
         wildcard: T,
         properties: FilterProperties,
-    ) -> Result<Self, RegenError> {
+    ) -> Result<Self, TisuError> {
         if pattern.size() != substitute.size() {
-            Err(RegenError::InvalidMapSize)
+            Err(TisuError::InvalidMapSize)
         } else {
             Ok(Self {
                 pattern,
@@ -238,13 +238,13 @@ impl<T> Filter<T> {
     ///
     /// Returns an error if map size is smaller than that of the pattern or
     /// substitute maps.
-    pub fn apply(&self, map: &Map<T>) -> Result<Map<T>, RegenError>
+    pub fn apply(&self, map: &Map<T>) -> Result<Map<T>, TisuError>
     where
         Map<T>: Clone,
         T: Clone + PartialEq,
     {
         if map.size().x < self.pattern().size().x || map.size().y < self.pattern().size().y {
-            Err(RegenError::InvalidMapSize)
+            Err(TisuError::InvalidMapSize)
         } else {
             let mut destination = map.clone();
             let mut application_map = if self.properties.only_once {
@@ -306,7 +306,7 @@ impl<T> FilterCollection<T> {
     ///
     /// Returns an error if any of the filters from the collection can't be
     /// applied to the map.
-    pub fn apply(&self, map: &Map<T>) -> Result<Map<T>, RegenError>
+    pub fn apply(&self, map: &Map<T>) -> Result<Map<T>, TisuError>
     where
         T: Clone + PartialEq,
     {
