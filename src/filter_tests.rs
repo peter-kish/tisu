@@ -3,8 +3,8 @@ use std::path::Path;
 use crate::{
     filter::{Filter, FilterCollection},
     filter_loader::FilterLoader,
-    importer::Importer,
     map::Map,
+    map_importer::MapImporter,
     tiled_importer::TiledImporter,
     tisu_error::TisuError,
 };

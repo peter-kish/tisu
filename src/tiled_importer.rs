@@ -1,8 +1,8 @@
 use tiled::Loader;
 
 use crate::{
-    importer::{Importer, LoadResult, MapLayer, PropertyLayer, PropertyRect},
     map::Map,
+    map_importer::{LoadResult, MapImporter, MapLayer, PropertyLayer, PropertyRect},
     rect2::Rect2u,
     tisu_error::TisuError,
     vector2::Vector2u,
@@ -54,7 +54,7 @@ impl TiledImporter {
     }
 }
 
-impl Importer for TiledImporter {
+impl MapImporter for TiledImporter {
     fn load(file: impl AsRef<std::path::Path>) -> Result<LoadResult, TisuError> {
         let mut loader = Loader::new();
         let tmx_map = loader

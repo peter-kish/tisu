@@ -1,14 +1,14 @@
 use std::path::Path;
 
 use crate::filter::{Filter, FilterCollection};
-use crate::importer::Importer;
+use crate::map_importer::MapImporter;
 use crate::map_segmenter;
 use crate::tisu_error::TisuError;
 
 pub struct FilterLoader {}
 
 impl FilterLoader {
-    pub fn load<T: Importer>(
+    pub fn load<T: MapImporter>(
         file: impl AsRef<Path>,
         wildcard: Option<u32>,
     ) -> Result<FilterCollection<Option<u32>>, TisuError> {

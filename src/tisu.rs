@@ -2,9 +2,9 @@ use std::path::{Path, PathBuf};
 
 use clap::Parser;
 use tiled::Loader;
-use tisu::exporter::Exporter;
 use tisu::filter_loader::FilterLoader;
-use tisu::importer::Importer;
+use tisu::map_exporter::MapExporter;
+use tisu::map_importer::MapImporter;
 use tisu::tiled_exporter::TiledExporter;
 use tisu::tiled_importer::TiledImporter;
 use tisu::tisu_error::TisuError;

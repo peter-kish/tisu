@@ -2,11 +2,11 @@ use std::fs::File;
 
 use xml::{common::XmlVersion, writer::XmlEvent, EmitterConfig};
 
-use crate::exporter::Exporter;
+use crate::map_exporter::MapExporter;
 
 pub struct TiledExporter {}
 
-impl Exporter for TiledExporter {
+impl MapExporter for TiledExporter {
     // TODO: Test
     fn save(
         file: impl AsRef<std::path::Path>,

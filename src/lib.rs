@@ -1,8 +1,8 @@
-pub mod exporter;
 pub mod filter;
 pub mod filter_loader;
-pub mod importer;
 pub mod map;
+pub mod map_exporter;
+pub mod map_importer;
 pub mod map_segmenter;
 pub mod rect2;
 pub mod tiled_exporter;

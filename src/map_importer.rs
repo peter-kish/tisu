@@ -56,6 +56,6 @@ impl LoadResult {
     }
 }
 
-pub trait Importer {
+pub trait MapImporter {
     fn load(file: impl AsRef<Path>) -> Result<LoadResult, TisuError>;
 }

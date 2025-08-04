@@ -4,7 +4,7 @@ use crate::map::Map;
 use crate::tisu_error::TisuError;
 use crate::vector2::Vector2u;
 
-pub trait Exporter {
+pub trait MapExporter {
     fn save(
         file: impl AsRef<Path>,
         map: &Map<Option<u32>>,
