@@ -2,10 +2,8 @@ use tiled::Loader;
 
 use crate::{
     map::Map,
-    map_importer::{LoadResult, MapImporter, MapLayer, PropertyLayer, PropertyRect},
-    rect2::Rect2u,
+    map_importer::{LoadResult, MapImporter, MapLayer},
     tisu_error::TisuError,
-    vector2::Vector2u,
 };
 
 pub struct TiledMapImporter {}
@@ -27,31 +25,6 @@ impl TiledMapImporter {
 
         Ok(map)
     }
-
-    fn load_object_layer(
-        layer: &tiled::ObjectLayer,
-        tile_size: Vector2u,
-    ) -> Result<PropertyLayer, TisuError> {
-        let mut result = PropertyLayer {
-            property_rects: vec![],
-        };
-        for object in layer.objects() {
-            if let tiled::ObjectShape::Rect { width, height } = object.shape {
-                let position = Vector2u::new(object.x.round() as u32, object.y.round() as u32);
-                let size = Vector2u::new(width.round() as u32, height.round() as u32);
-                let pos_converted =
-                    Vector2u::new(position.x / tile_size.x, position.y / tile_size.y);
-                let size_converted = Vector2u::new(size.x / tile_size.x, size.y / tile_size.y);
-
-                let property_rect = PropertyRect {
-                    rect: Rect2u::new(pos_converted, size_converted)?,
-                    properties: (&object.properties).into(),
-                };
-                result.property_rects.push(property_rect);
-            }
-        }
-        Ok(result)
-    }
 }
 
 impl MapImporter for TiledMapImporter {
@@ -63,10 +36,8 @@ impl MapImporter for TiledMapImporter {
 
         let mut result = LoadResult {
             map_layers: vec![],
-            property_layers: vec![],
             tileset_path: tmx_map.tilesets()[0].source.clone(),
         };
-        let tile_size = Vector2u::new(tmx_map.tile_width, tmx_map.tile_height);
         for layer in tmx_map.layers() {
             if let tiled::LayerType::Tiles(tiled::TileLayer::Finite(finite_tile_layer)) =
                 layer.layer_type()
@@ -74,11 +45,6 @@ impl MapImporter for TiledMapImporter {
                 let map = Self::load_finite_tile_layer(&finite_tile_layer)?;
 
                 result.map_layers.push(MapLayer { map });
-            }
-
-            if let tiled::LayerType::Objects(object_layer) = layer.layer_type() {
-                let property_layer = Self::load_object_layer(&object_layer, tile_size)?;
-                result.property_layers.push(property_layer);
             }
         }
         Ok(result)
