@@ -261,7 +261,7 @@ fn load_test_map(file_path: impl AsRef<Path>) -> Map<Option<u32>> {
 }
 
 fn load_test_data(test_name: &str) -> TestData {
-    let filter_collection = TiledFilterImporter::load::<TiledMapImporter>(
+    let filter_collection = TiledFilterImporter::load(
         format!(
             "{}/data/test_{}/filter_collection.tmx",
             env!("CARGO_MANIFEST_DIR"),

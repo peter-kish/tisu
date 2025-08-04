@@ -37,8 +37,8 @@ fn main() {
     let args = CmdLineArgs::parse();
 
     let load_result = TiledMapImporter::load(&args.input).expect("Failed to load map");
-    let filters = TiledFilterImporter::load::<TiledMapImporter>(&args.filters, Some(4))
-        .expect("Failed to load filters");
+    let filters =
+        TiledFilterImporter::load(&args.filters, Some(4)).expect("Failed to load filters");
     let new_map = filters
         .apply(&load_result.map_layers[0].map)
         .expect("Failed to apply filters");
