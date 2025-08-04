@@ -1,10 +1,11 @@
 pub mod filter;
-pub mod filter_loader;
+pub mod filter_importer;
 pub mod map;
 pub mod map_exporter;
 pub mod map_importer;
 pub mod map_segmenter;
 pub mod rect2;
+pub mod tiled_filter_importer;
 pub mod tiled_map_exporter;
 pub mod tiled_map_importer;
 pub mod tisu_error;

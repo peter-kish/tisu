@@ -2,9 +2,10 @@ use std::path::{Path, PathBuf};
 
 use clap::Parser;
 use tiled::Loader;
-use tisu::filter_loader::FilterLoader;
+use tisu::filter_importer::FilterImporter;
 use tisu::map_exporter::MapExporter;
 use tisu::map_importer::MapImporter;
+use tisu::tiled_filter_importer::TiledFilterImporter;
 use tisu::tiled_map_exporter::TiledMapExporter;
 use tisu::tiled_map_importer::TiledMapImporter;
 use tisu::tisu_error::TisuError;
@@ -36,7 +37,7 @@ fn main() {
     let args = CmdLineArgs::parse();
 
     let load_result = TiledMapImporter::load(&args.input).expect("Failed to load map");
-    let filters = FilterLoader::load::<TiledMapImporter>(&args.filters, Some(4))
+    let filters = TiledFilterImporter::load::<TiledMapImporter>(&args.filters, Some(4))
         .expect("Failed to load filters");
     let new_map = filters
         .apply(&load_result.map_layers[0].map)

@@ -2,9 +2,10 @@ use std::path::Path;
 
 use crate::{
     filter::{Filter, FilterCollection},
-    filter_loader::FilterLoader,
+    filter_importer::FilterImporter,
     map::Map,
     map_importer::MapImporter,
+    tiled_filter_importer::TiledFilterImporter,
     tiled_map_importer::TiledMapImporter,
     tisu_error::TisuError,
 };
@@ -260,7 +261,7 @@ fn load_test_map(file_path: impl AsRef<Path>) -> Map<Option<u32>> {
 }
 
 fn load_test_data(test_name: &str) -> TestData {
-    let filter_collection = FilterLoader::load::<TiledMapImporter>(
+    let filter_collection = TiledFilterImporter::load::<TiledMapImporter>(
         format!(
             "{}/data/test_{}/filter_collection.tmx",
             env!("CARGO_MANIFEST_DIR"),
