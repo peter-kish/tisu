@@ -7,7 +7,6 @@ pub mod rect2;
 pub mod tiled_exporter;
 pub mod tiled_filter_loader;
 pub mod tiled_importer;
-pub mod tiled_map_loader;
 pub mod tisu_error;
 pub mod vector2;
 

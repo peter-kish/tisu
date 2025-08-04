@@ -1,18 +1,18 @@
 use std::path::Path;
 
 use crate::filter::{Filter, FilterCollection};
+use crate::importer::Importer;
 use crate::map_segmenter;
-use crate::tiled_map_loader::TiledMapLoader;
 use crate::tisu_error::TisuError;
 
 pub struct TiledFilterLoader {}
 
 impl TiledFilterLoader {
-    pub fn load(
+    pub fn load<T: Importer>(
         file: impl AsRef<Path>,
         wildcard: Option<u32>,
     ) -> Result<FilterCollection<Option<u32>>, TisuError> {
-        let load_result = TiledMapLoader::load(file)?;
+        let load_result = T::load(file)?;
         let mut filter_collection = FilterCollection::<Option<u32>>::default();
         for layer in &load_result.map_layers {
             let segments = map_segmenter::extract_segments(&layer.map, &None);
@@ -40,7 +40,7 @@ impl TiledFilterLoader {
 
 #[cfg(test)]
 mod tests {
-    use crate::map::Map;
+    use crate::{map::Map, tiled_importer::TiledImporter};
 
     use super::*;
 
@@ -60,7 +60,7 @@ mod tests {
         let substitute = Map::<Option<u32>>::from_data([[Some(0), Some(0), Some(0)]]).unwrap();
         let filter3 = Filter::new(pattern, substitute, Some(4)).unwrap();
 
-        let filter_collection = TiledFilterLoader::load(
+        let filter_collection = TiledFilterLoader::load::<TiledImporter>(
             format!(
                 "{}/data/test_apply_filter_collection/filter_collection.tmx",
                 env!("CARGO_MANIFEST_DIR"),

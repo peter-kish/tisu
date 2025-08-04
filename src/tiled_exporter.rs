@@ -4,7 +4,7 @@ use xml::{common::XmlVersion, writer::XmlEvent, EmitterConfig};
 
 use crate::exporter::Exporter;
 
-struct TiledExporter {}
+pub struct TiledExporter {}
 
 impl Exporter for TiledExporter {
     // TODO: Test
