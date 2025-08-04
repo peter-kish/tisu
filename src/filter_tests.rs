@@ -5,7 +5,7 @@ use crate::{
     filter_loader::FilterLoader,
     map::Map,
     map_importer::MapImporter,
-    tiled_importer::TiledImporter,
+    tiled_map_importer::TiledMapImporter,
     tisu_error::TisuError,
 };
 
@@ -255,12 +255,12 @@ struct TestData {
 }
 
 fn load_test_map(file_path: impl AsRef<Path>) -> Map<Option<u32>> {
-    let result = TiledImporter::load(file_path);
+    let result = TiledMapImporter::load(file_path);
     result.unwrap().map_layers[0].map.clone()
 }
 
 fn load_test_data(test_name: &str) -> TestData {
-    let filter_collection = FilterLoader::load::<TiledImporter>(
+    let filter_collection = FilterLoader::load::<TiledMapImporter>(
         format!(
             "{}/data/test_{}/filter_collection.tmx",
             env!("CARGO_MANIFEST_DIR"),

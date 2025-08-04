@@ -4,9 +4,9 @@ use xml::{common::XmlVersion, writer::XmlEvent, EmitterConfig};
 
 use crate::map_exporter::MapExporter;
 
-pub struct TiledExporter {}
+pub struct TiledMapExporter {}
 
-impl MapExporter for TiledExporter {
+impl MapExporter for TiledMapExporter {
     // TODO: Test
     fn save(
         file: impl AsRef<std::path::Path>,

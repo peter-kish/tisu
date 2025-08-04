@@ -40,7 +40,7 @@ impl FilterLoader {
 
 #[cfg(test)]
 mod tests {
-    use crate::{map::Map, tiled_importer::TiledImporter};
+    use crate::{map::Map, tiled_map_importer::TiledMapImporter};
 
     use super::*;
 
@@ -60,7 +60,7 @@ mod tests {
         let substitute = Map::<Option<u32>>::from_data([[Some(0), Some(0), Some(0)]]).unwrap();
         let filter3 = Filter::new(pattern, substitute, Some(4)).unwrap();
 
-        let filter_collection = FilterLoader::load::<TiledImporter>(
+        let filter_collection = FilterLoader::load::<TiledMapImporter>(
             format!(
                 "{}/data/test_apply_filter_collection/filter_collection.tmx",
                 env!("CARGO_MANIFEST_DIR"),

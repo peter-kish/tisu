@@ -5,8 +5,8 @@ pub mod map_exporter;
 pub mod map_importer;
 pub mod map_segmenter;
 pub mod rect2;
-pub mod tiled_exporter;
-pub mod tiled_importer;
+pub mod tiled_map_exporter;
+pub mod tiled_map_importer;
 pub mod tisu_error;
 pub mod vector2;
 

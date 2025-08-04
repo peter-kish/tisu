@@ -5,8 +5,8 @@ use tiled::Loader;
 use tisu::filter_loader::FilterLoader;
 use tisu::map_exporter::MapExporter;
 use tisu::map_importer::MapImporter;
-use tisu::tiled_exporter::TiledExporter;
-use tisu::tiled_importer::TiledImporter;
+use tisu::tiled_map_exporter::TiledMapExporter;
+use tisu::tiled_map_importer::TiledMapImporter;
 use tisu::tisu_error::TisuError;
 use tisu::vector2::Vector2u;
 
@@ -35,13 +35,13 @@ fn load_tile_size(file: impl AsRef<Path>) -> Result<Vector2u, TisuError> {
 fn main() {
     let args = CmdLineArgs::parse();
 
-    let load_result = TiledImporter::load(&args.input).expect("Failed to load map");
-    let filters = FilterLoader::load::<TiledImporter>(&args.filters, Some(4))
+    let load_result = TiledMapImporter::load(&args.input).expect("Failed to load map");
+    let filters = FilterLoader::load::<TiledMapImporter>(&args.filters, Some(4))
         .expect("Failed to load filters");
     let new_map = filters
         .apply(&load_result.map_layers[0].map)
         .expect("Failed to apply filters");
     let tile_size = load_tile_size(&load_result.tileset_path).expect("Failed to load tileset");
-    TiledExporter::save(&args.output, &new_map, tile_size, &load_result.tileset_path)
+    TiledMapExporter::save(&args.output, &new_map, tile_size, &load_result.tileset_path)
         .expect("Failed to save map");
 }

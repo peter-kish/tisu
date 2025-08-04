@@ -8,9 +8,9 @@ use crate::{
     vector2::Vector2u,
 };
 
-pub struct TiledImporter {}
+pub struct TiledMapImporter {}
 
-impl TiledImporter {
+impl TiledMapImporter {
     fn load_finite_tile_layer(
         layer: &tiled::FiniteTileLayer,
     ) -> Result<Map<Option<u32>>, TisuError> {
@@ -54,7 +54,7 @@ impl TiledImporter {
     }
 }
 
-impl MapImporter for TiledImporter {
+impl MapImporter for TiledMapImporter {
     fn load(file: impl AsRef<std::path::Path>) -> Result<LoadResult, TisuError> {
         let mut loader = Loader::new();
         let tmx_map = loader
@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn test_load() {
-        let result = TiledImporter::load(
+        let result = TiledMapImporter::load(
             format!("{}/{}", env!("CARGO_MANIFEST_DIR"), "data/3x3.tmx").as_str(),
         );
 
