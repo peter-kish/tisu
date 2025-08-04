@@ -5,9 +5,9 @@ use crate::importer::Importer;
 use crate::map_segmenter;
 use crate::tisu_error::TisuError;
 
-pub struct TiledFilterLoader {}
+pub struct FilterLoader {}
 
-impl TiledFilterLoader {
+impl FilterLoader {
     pub fn load<T: Importer>(
         file: impl AsRef<Path>,
         wildcard: Option<u32>,
@@ -60,7 +60,7 @@ mod tests {
         let substitute = Map::<Option<u32>>::from_data([[Some(0), Some(0), Some(0)]]).unwrap();
         let filter3 = Filter::new(pattern, substitute, Some(4)).unwrap();
 
-        let filter_collection = TiledFilterLoader::load::<TiledImporter>(
+        let filter_collection = FilterLoader::load::<TiledImporter>(
             format!(
                 "{}/data/test_apply_filter_collection/filter_collection.tmx",
                 env!("CARGO_MANIFEST_DIR"),
