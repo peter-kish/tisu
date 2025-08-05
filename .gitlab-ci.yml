@@ -32,6 +32,5 @@ deploy:
     - cargo build --release
   artifacts:
     paths:
-      - target/release/regen
-      - target/release/refilter
+      - target/release/tisu
   environment: production
