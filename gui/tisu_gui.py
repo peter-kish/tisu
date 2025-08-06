@@ -1,201 +1,161 @@
 import tkinter as tk
 import json
 import subprocess
+from enum import Enum
 from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
 
-app_state = {
-    "tisu_path": "",
-    "input_path": "",
-    "filter_path": "",
-    "output_path": "",
-}
-
-
-def save_app_state():
-    # print(f"Saving app state:\n {app_state}")
-    with open("tisu_gui.json", "w") as file:
-        json.dump(app_state, file, indent=4)
-
-
-def load_app_state():
-    try:
-        with open("tisu_gui.json", "r") as file:
-            global app_state
-            app_state = json.load(file)
-        # print(f"Loaded app state:\n {app_state}")
-    except Exception:
-        print("Warning: Can't open tisu_gui.json")
-
-
-load_app_state()
-
-
-# create the root window
-root = tk.Tk()
-root.title("Tisu GUI")
-root.resizable(True, True)
-root.geometry("600x200")
-
-def close_gui():
-    save_app_state()
-    root.destroy()
-
-root.protocol("WM_DELETE_WINDOW", close_gui)
-
-
-bin_filetypes = (
+APP_STATE_FILE = "tisu_gui.json"
+FILETYPES_BIN = (
         ("Binary files", "*"),
         ("All files", "*.*")
     )
-tmx_filetypes = (
+FILETYPES_TMX = (
         ("TMX files", "*.tmx"),
         ("All files", "*.*")
     )
 
 
-def select_file(filetypes):
-    return fd.askopenfilename(
-        title="Input file",
-        initialdir="/",
-        filetypes=filetypes)
+class ParameterType(Enum):
+    TISU = "tisu_path"
+    INPUT = "input_path"
+    FILTER = "filter_path"
+    OUTPUT = "output_path"
 
 
-def select_tisu():
-    filename = select_file(bin_filetypes)
+PARAMETER_LABELS = {
+    ParameterType.TISU: "Tisu Executable: ",
+    ParameterType.INPUT: "Input: ",
+    ParameterType.FILTER: "Filter: ",
+    ParameterType.OUTPUT: "Output: ",
+}
 
-    if not filename:
-        return
+PARAMETER_FILE_TYPES = {
+    ParameterType.TISU: FILETYPES_BIN,
+    ParameterType.INPUT: FILETYPES_TMX,
+    ParameterType.FILTER: FILETYPES_TMX,
+    ParameterType.OUTPUT: FILETYPES_TMX,
+}
+
+
+class AppState:
+    def __init__(self):
+        self.paths = {}
+        for parameter_type in ParameterType:
+            self.paths[parameter_type.value] = ""
+
+    def load(self):
+        try:
+            with open(APP_STATE_FILE, "r") as file:
+                self.paths = json.load(file)
+            # print(f"Loaded app state:\n {self.paths}")
+        except Exception:
+            print(f"Warning: Can't open {APP_STATE_FILE}")
+
+    def save(self):
+        # print(f"Saving app state:\n {self.paths}")
+        with open(APP_STATE_FILE, "w") as file:
+            json.dump(self.paths, file, indent=4)
+
+
+class TisuGui:
+    def __init__(self):
+        self.app_state = AppState()
+        self.app_state.load()
     
-    app_state["tisu_path"] = filename
-    tisu_button.config(text=filename)
+        self.root = TisuGui._create_root_widget()
+        self.root.protocol("WM_DELETE_WINDOW", self._quit)
 
+        self.param_buttons = {}
+        for parameter_type in ParameterType:
+            self.param_buttons[parameter_type] = self._create_parameter_button(parameter_type)
 
-def select_input():
-    filename = select_file(tmx_filetypes)
+        self.run_button = self._create_run_button()
 
-    if not filename:
-        return
+        # Bind the Enter key to invoke the run_button
+        self.root.bind('<Return>', lambda event=None: self.run_button.invoke())
+
+    def main_loop(self):
+        self.root.mainloop()
+
+    def _create_root_widget():
+        root = tk.Tk()
+        root.title("Tisu GUI")
+        root.resizable(True, True)
+        root.geometry("600x200")
+        return root
     
-    app_state["input_path"] = filename
-    input_button.config(text=filename)
+    def _create_parameter_button(self, parameter_type):
+        frame = ttk.Frame(self.root)
+        frame.pack(side="top", fill="x")
 
+        label = ttk.Label(frame, text=PARAMETER_LABELS[parameter_type])
+        label.pack(side="left")
 
-def select_filter():
-    filename = select_file(tmx_filetypes)
+        button_text = self.app_state.paths[parameter_type.value]
 
-    if not filename:
-        return
+        button = ttk.Button(
+            frame,
+            text=button_text if button_text else "...",
+            command=lambda: self._select_file(parameter_type)
+        )
+        button.pack(side="left", fill="x", expand=True)
+        return button
     
-    app_state["filter_path"] = filename
-    filter_button.config(text=filename)
+    def _select_file(self, parameter_type):
+        filename = fd.askopenfilename(
+            title="Select File",
+            initialdir="/",
+            filetypes=PARAMETER_FILE_TYPES[parameter_type])
 
-
-def select_output():
-    filename = select_file(tmx_filetypes)
-
-    if not filename:
-        return
-    
-    app_state["output_path"] = filename
-    output_button.config(text=filename)
-
-
-def run():
-    for k,v in app_state.items():
-        if not v:
-            showinfo(
-                title="Missing path",
-                message=f"{k} missing",
-                icon="error"
-            )
+        if not filename:
             return
-    print("Running tisu...")
-    subprocess.run(get_cmd())
-    print("...done.")
-    close_gui()
+        
+        self.app_state.paths[parameter_type.value] = filename
+        self.param_buttons[parameter_type].config(text=filename)
 
+    def _create_run_button(self):
+        frame = ttk.Frame(self.root)
+        frame.pack(side="bottom", expand=True, fill="both")
 
-def get_cmd():
-    return [
-        app_state["tisu_path"],
-        "--input",
-        app_state["input_path"],
-        "--filters", app_state["filter_path"],
-        "--output",
-        app_state["output_path"]
+        run_button = ttk.Button(
+            frame,
+            text="Run",
+            command=self._run
+        )
+        run_button.pack(fill="x", expand=False, side="bottom")
+        run_button.focus_set()
+        return run_button
+
+    def _run(self):
+        for k,v in self.app_state.paths.items():
+            if not v:
+                showinfo(
+                    title="Missing path",
+                    message=f"Parameter '{k}' not set!",
+                    icon="error"
+                )
+                return
+        print("Running tisu...")
+        subprocess.run(self._get_cmd())
+        print("...done.")
+        self._quit()
+
+    def _get_cmd(self):
+        return [
+            self.app_state.paths[ParameterType.TISU.value],
+            "--input",
+            self.app_state.paths[ParameterType.INPUT.value],
+            "--filters",
+            self.app_state.paths[ParameterType.FILTER.value],
+            "--output",
+            self.app_state.paths[ParameterType.OUTPUT.value]
         ]
+    
+    def _quit(self):
+        self.app_state.save()
+        self.root.destroy()
 
 
-tisu_frame = ttk.Frame(root)
-tisu_frame.pack(side="top", fill="x")
-input_frame = ttk.Frame(root)
-input_frame.pack(side="top", fill="x")
-filter_frame = ttk.Frame(root)
-filter_frame.pack(side="top", fill="x")
-output_frame = ttk.Frame(root)
-output_frame.pack(side="top", fill="x")
-button_frame = ttk.Frame(root)
-button_frame.pack(side="bottom", expand=True, fill="both")
-
-
-tisu_label = ttk.Label(tisu_frame, text="Tisu Executable:")
-tisu_label.pack(side="left")
-
-tisu_button = ttk.Button(
-    tisu_frame,
-    text=app_state["tisu_path"] if app_state["tisu_path"] else "...",
-    command=select_tisu
-)
-tisu_button.pack(side="left", fill="x", expand=True)
-
-
-input_label = ttk.Label(input_frame, text="Input:")
-input_label.pack(side="left")
-
-input_button = ttk.Button(
-    input_frame,
-    text=app_state["input_path"] if app_state["input_path"] else "...",
-    command=select_input
-)
-input_button.pack(side="left", fill="x", expand=True)
-
-
-filter_label = ttk.Label(filter_frame, text="Filter:")
-filter_label.pack(side="left")
-
-filter_button = ttk.Button(
-    filter_frame,
-    text=app_state["filter_path"] if app_state["filter_path"] else "...",
-    command=select_filter
-)
-filter_button.pack(side="left", fill="x", expand=True)
-
-
-output_label = ttk.Label(output_frame, text="Output:")
-output_label.pack(side="left")
-
-output_button = ttk.Button(
-    output_frame,
-    text=app_state["output_path"] if app_state["output_path"] else "...",
-    command=select_output
-)
-output_button.pack(side="left", fill="x", expand=True)
-
-
-run_button = ttk.Button(
-    button_frame,
-    text="Run",
-    command=run
-)
-run_button.pack(fill="x", expand=False, side="bottom")
-run_button.focus_set()
-
-
-# Bind the Enter key to invoke the run_button
-root.bind('<Return>', lambda event=None: run_button.invoke())
-
-
-# run the application
-root.mainloop()
+TisuGui().main_loop()
