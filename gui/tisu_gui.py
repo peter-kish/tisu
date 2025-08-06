@@ -1,3 +1,4 @@
+import argparse
 import tkinter as tk
 import json
 import subprocess
@@ -61,14 +62,16 @@ class AppState:
 
 
 class TisuGui:
-    def __init__(self):
-        self.app_state = AppState()
-        self.app_state.load()
+    def __init__(self, app_state, working_dir):
+        self.app_state = app_state
     
         self.root = TisuGui._create_root_widget()
         self.root.protocol("WM_DELETE_WINDOW", self._quit)
 
-        self.last_path = "/"
+        if working_dir and os.path.exists(working_dir):
+            self.last_path = working_dir
+        else:
+            self.last_path = "/"
 
         self.param_buttons = {}
         for parameter_type in ParameterType:
@@ -168,4 +171,19 @@ class TisuGui:
         self.root.destroy()
 
 
-TisuGui().main_loop()
+def main():
+    parser = argparse.ArgumentParser(description="Tisu GUI")
+    parser.add_argument("-i", "--input", help = "Input file")
+    parser.add_argument("-w", "--working_dir", help = "Working directory")
+    args = parser.parse_args()
+
+    app_state = AppState()
+    app_state.load()
+    if args.input:
+        app_state.paths[ParameterType.INPUT.value] = args.input
+        
+    TisuGui(app_state, args.working_dir).main_loop()
+
+
+if __name__ == "__main__":
+    main()
