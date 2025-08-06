@@ -1,6 +1,7 @@
 import tkinter as tk
 import json
 import subprocess
+import os
 from enum import Enum
 from tkinter import ttk
 from tkinter import filedialog as fd
@@ -67,6 +68,8 @@ class TisuGui:
         self.root = TisuGui._create_root_widget()
         self.root.protocol("WM_DELETE_WINDOW", self._quit)
 
+        self.last_path = "/"
+
         self.param_buttons = {}
         for parameter_type in ParameterType:
             self.param_buttons[parameter_type] = self._create_parameter_button(parameter_type)
@@ -106,14 +109,21 @@ class TisuGui:
     def _select_file(self, parameter_type):
         filename = fd.askopenfilename(
             title="Select File",
-            initialdir="/",
+            initialdir=self._get_path_dir(self.app_state.paths[parameter_type.value]),
             filetypes=PARAMETER_FILE_TYPES[parameter_type])
 
         if not filename:
             return
         
+        self.last_path = filename
         self.app_state.paths[parameter_type.value] = filename
         self.param_buttons[parameter_type].config(text=filename)
+
+    def _get_path_dir(self, path):
+        if os.path.exists(path):
+            return os.path.dirname(path)
+        else:
+            return os.path.dirname(self.last_path)
 
     def _create_run_button(self):
         frame = ttk.Frame(self.root)
