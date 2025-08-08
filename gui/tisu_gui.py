@@ -150,9 +150,14 @@ class TisuGui:
                     icon="error"
                 )
                 return
-        print("Running tisu...")
-        subprocess.run(self._get_cmd())
-        print("...done.")
+
+        cmd = self._get_cmd()
+        print("Running:", end=" ")
+        for cmd_part in cmd:
+            print(cmd_part, end=" ")
+        print()
+
+        subprocess.run(cmd)
         self._quit()
 
     def _get_cmd(self):
