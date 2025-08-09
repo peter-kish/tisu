@@ -17,11 +17,11 @@
  </layer>
  <objectgroup id="5" name="Object Layer 1">
   <properties>
-   <property name="apply_to" value="source"/>
+   <property name="pattern_matching" value="destination"/>
   </properties>
   <object id="8" x="16" y="48" width="80" height="32">
    <properties>
-    <property name="apply_to" value="source"/>
+    <property name="pattern_matching" value="destination"/>
    </properties>
   </object>
  </objectgroup>

@@ -9,18 +9,18 @@ use crate::vector2::Vector2u;
 /// Filter property that defines where the filter will be applied (source or
 /// destination)
 #[derive(Clone, PartialEq, Debug, Default)]
-pub enum ApplyTo {
+pub enum PatternMatching {
     #[default]
-    Destination,
     Source,
+    Destination,
 }
 
-impl TryFrom<&String> for ApplyTo {
+impl TryFrom<&String> for PatternMatching {
     type Error = ();
     fn try_from(value: &String) -> Result<Self, Self::Error> {
         match value.as_str() {
-            "destination" => Ok(ApplyTo::Destination),
-            "source" => Ok(ApplyTo::Source),
+            "destination" => Ok(PatternMatching::Destination),
+            "source" => Ok(PatternMatching::Source),
             _ => Err(()),
         }
     }
@@ -35,7 +35,7 @@ pub struct FilterProperties {
     /// to range [0..1]).
     probability: f32,
     /// Defines where the filter will be applied (source or destination).
-    apply_to: ApplyTo,
+    apply_to: PatternMatching,
     /// If true, the filter will be applied only once per field. Once a filter
     /// has been applied to a field, that field will not result in any further
     /// pattern matches.
@@ -48,9 +48,11 @@ impl From<&Properties> for FilterProperties {
             Some(PropertyValue::FloatValue(p)) => *p,
             _ => 1.0,
         };
-        let apply_to: ApplyTo = match value.get("apply_to") {
-            Some(PropertyValue::StringValue(p)) => p.try_into().unwrap_or(ApplyTo::default()),
-            _ => ApplyTo::Destination,
+        let apply_to: PatternMatching = match value.get("pattern_matching") {
+            Some(PropertyValue::StringValue(p)) => {
+                p.try_into().unwrap_or(PatternMatching::default())
+            }
+            _ => PatternMatching::default(),
         };
         let only_once = match value.get("only_once") {
             Some(PropertyValue::BoolValue(p)) => *p,
@@ -69,7 +71,7 @@ impl Default for FilterProperties {
     fn default() -> Self {
         Self {
             probability: 1.0,
-            apply_to: ApplyTo::Destination,
+            apply_to: PatternMatching::default(),
             only_once: false,
         }
     }
@@ -238,47 +240,41 @@ impl<T> Filter<T> {
     ///
     /// Returns an error if map size is smaller than that of the pattern or
     /// substitute maps.
-    pub fn apply(&self, map: &Map<T>) -> Result<Map<T>, TisuError>
+    pub fn apply(&self, source: &Map<T>, destination: &mut Map<T>) -> Result<(), TisuError>
     where
         Map<T>: Clone,
         T: Clone + PartialEq,
     {
-        if map.size().x < self.pattern().size().x || map.size().y < self.pattern().size().y {
+        if source.size() != destination.size()
+            || source.size().x < self.pattern().size().x
+            || source.size().y < self.pattern().size().y
+        {
             Err(TisuError::InvalidMapSize)
         } else {
-            let mut destination = map.clone();
             let mut application_map = if self.properties.only_once {
-                Some(ApplicationMap::new(map.size()))
+                Some(ApplicationMap::new(source.size()))
             } else {
                 None
             };
 
-            for x in 0..=map.size().x - self.pattern().size().x {
-                for y in 0..=map.size().y - self.pattern().size().y {
+            for x in 0..=source.size().x - self.pattern().size().x {
+                for y in 0..=source.size().y - self.pattern().size().y {
                     let point = Vector2u::new(x, y);
                     match self.properties.apply_to {
-                        ApplyTo::Destination => {
-                            if self.pattern_matches(map, point, &application_map) {
-                                self.apply_substitute(
-                                    &mut destination,
-                                    point,
-                                    &mut application_map,
-                                );
+                        PatternMatching::Destination => {
+                            if self.pattern_matches(destination, point, &application_map) {
+                                self.apply_substitute(destination, point, &mut application_map);
                             }
                         }
-                        ApplyTo::Source => {
-                            if self.pattern_matches(&destination, point, &application_map) {
-                                self.apply_substitute(
-                                    &mut destination,
-                                    point,
-                                    &mut application_map,
-                                );
+                        PatternMatching::Source => {
+                            if self.pattern_matches(source, point, &application_map) {
+                                self.apply_substitute(destination, point, &mut application_map);
                             }
                         }
                     }
                 }
             }
-            Ok(destination)
+            Ok(())
         }
     }
 }
@@ -310,18 +306,13 @@ impl<T> FilterCollection<T> {
     where
         T: Clone + PartialEq,
     {
-        let mut maybe_result: Option<Map<T>> = None;
+        let mut destination = map.clone();
+
         for filter in &self.filters {
-            maybe_result = match maybe_result {
-                Some(result) => Some(filter.apply(&result)?),
-                None => Some(filter.apply(map)?),
-            };
+            filter.apply(map, &mut destination)?;
         }
 
-        match maybe_result {
-            None => Ok(map.clone()),
-            Some(result) => Ok(result),
-        }
+        Ok(destination)
     }
 
     pub fn push(&mut self, filter: Filter<T>) {

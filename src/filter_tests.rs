@@ -96,12 +96,11 @@ fn test_apply_filter_success() {
     // 0 1 1
     let expected_data = [0, 1, 1, 1, 1, 1, 0, 1, 1];
 
-    let result = filter.apply(&map);
+    let mut dst = map.clone();
+    let result = filter.apply(&map, &mut dst);
 
     assert!(result.is_ok());
-    let result_map = result.unwrap();
-    assert_eq!(result_map.data(), &expected_data);
-    assert_eq!(result_map.size(), map.size());
+    assert_eq!(dst.data(), &expected_data);
 }
 
 #[test]
@@ -116,7 +115,8 @@ fn test_apply_filter_failure() {
     let substitute = Map::<u32>::from_data([[0, 1, 1, 1]]).unwrap();
     let filter = Filter::new(pattern, substitute, 42).unwrap();
 
-    let result = filter.apply(&map);
+    let mut dst = map.clone();
+    let result = filter.apply(&map, &mut dst);
 
     assert_eq!(result.err().unwrap(), TisuError::InvalidMapSize);
 }
@@ -137,12 +137,11 @@ fn test_apply_filter_patter_with_wildcard() {
     // 0 1 0
     let expected_data = [0, 1, 0, 0, 1, 0, 0, 1, 0];
 
-    let result = filter.apply(&map);
+    let mut dst = map.clone();
+    let result = filter.apply(&map, &mut dst);
 
     assert!(result.is_ok());
-    let result_map = result.unwrap();
-    assert_eq!(result_map.data(), &expected_data);
-    assert_eq!(result_map.size(), map.size());
+    assert_eq!(dst.data(), &expected_data);
 }
 
 #[test]
@@ -161,12 +160,11 @@ fn test_apply_filter_substitute_with_wildcard() {
     // 1 1 1
     let expected_data = [1, 1, 1, 1, 1, 1, 1, 1, 1];
 
-    let result = filter.apply(&map);
+    let mut dst = map.clone();
+    let result = filter.apply(&map, &mut dst);
 
     assert!(result.is_ok());
-    let result_map = result.unwrap();
-    assert_eq!(result_map.data(), &expected_data);
-    assert_eq!(result_map.size(), map.size());
+    assert_eq!(dst.data(), &expected_data);
 }
 
 #[test]
@@ -180,16 +178,16 @@ fn test_apply_filter_collection_success() {
     // 0 1
     let substitute1 = Map::<u32>::from_data([[0, 1]]).unwrap();
     let filter1 = Filter::new(pattern1, substitute1, 42).unwrap();
-    // 0 1 1
-    let pattern2 = Map::<u32>::from_data([[0, 1, 1]]).unwrap();
+    // 1 1 1
+    let pattern2 = Map::<u32>::from_data([[1, 1, 1]]).unwrap();
     // 0 0 0
     let substitute2 = Map::<u32>::from_data([[0, 0, 0]]).unwrap();
     let filter2 = Filter::new(pattern2, substitute2, 42).unwrap();
     let filter_collection = FilterCollection::new(&[filter1, filter2]);
+    // 0 1 1
     // 0 0 0
-    // 1 1 1
-    // 0 0 0
-    let expected_data = [0, 0, 0, 1, 1, 1, 0, 0, 0];
+    // 0 1 1
+    let expected_data = [0, 1, 1, 0, 0, 0, 0, 1, 1];
 
     let result = filter_collection.apply(&map);
 
@@ -298,6 +296,15 @@ fn load_test_data(test_name: &str) -> TestData {
 }
 
 #[test]
+fn apply_filter_collection_simple() {
+    let test_data = load_test_data("apply_filter_collection_simple");
+
+    let output = test_data.filter_collection.apply(&test_data.input).unwrap();
+
+    assert_eq!(test_data.expected_output, output);
+}
+
+#[test]
 fn apply_filter_collection() {
     let test_data = load_test_data("apply_filter_collection");
 
@@ -317,7 +324,7 @@ fn apply_filter_collection_probability() {
 
 #[test]
 fn apply_filter_collection_to_source() {
-    let test_data = load_test_data("apply_filter_collection_to_source");
+    let test_data = load_test_data("apply_filter_collection_pattern_matching");
 
     let output = test_data.filter_collection.apply(&test_data.input).unwrap();
 
