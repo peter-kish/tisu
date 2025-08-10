@@ -249,7 +249,7 @@ fn test_filter_collection_push() {
 }
 
 struct TestData {
-    filter_collection: FilterCollection<Option<u32>>,
+    filter_collections: Vec<FilterCollection<Option<u32>>>,
     input: Map<Option<u32>>,
     expected_output: Map<Option<u32>>,
 }
@@ -260,7 +260,7 @@ fn load_test_map(file_path: impl AsRef<Path>) -> Map<Option<u32>> {
 }
 
 fn load_test_data(test_name: &str) -> TestData {
-    let mut filter_collections = TiledFilterImporter::load(
+    let filter_collections = TiledFilterImporter::load(
         format!(
             "{}/data/test_{}/filter_collection.tmx",
             env!("CARGO_MANIFEST_DIR"),
@@ -290,7 +290,7 @@ fn load_test_data(test_name: &str) -> TestData {
     );
 
     TestData {
-        filter_collection: filter_collections.remove(0),
+        filter_collections,
         input,
         expected_output,
     }
@@ -301,10 +301,11 @@ fn apply_filter_collection_simple() {
     let test_data = load_test_data("apply_filter_collection_simple");
 
     let mut destination = test_data.input.clone();
-    assert!(test_data
-        .filter_collection
-        .apply(&test_data.input, &mut destination)
-        .is_ok(),);
+    for filter_collection in &test_data.filter_collections {
+        assert!(filter_collection
+            .apply(&test_data.input, &mut destination)
+            .is_ok(),);
+    }
 
     assert_eq!(test_data.expected_output, destination);
 }
@@ -314,10 +315,11 @@ fn apply_filter_collection() {
     let test_data = load_test_data("apply_filter_collection");
 
     let mut destination = test_data.input.clone();
-    assert!(test_data
-        .filter_collection
-        .apply(&test_data.input, &mut destination)
-        .is_ok(),);
+    for filter_collection in &test_data.filter_collections {
+        assert!(filter_collection
+            .apply(&test_data.input, &mut destination)
+            .is_ok(),);
+    }
 
     assert_eq!(test_data.expected_output, destination);
 }
@@ -327,23 +329,25 @@ fn apply_filter_collection_probability() {
     let test_data = load_test_data("apply_filter_collection_probability");
 
     let mut destination = test_data.input.clone();
-    assert!(test_data
-        .filter_collection
-        .apply(&test_data.input, &mut destination)
-        .is_ok(),);
+    for filter_collection in &test_data.filter_collections {
+        assert!(filter_collection
+            .apply(&test_data.input, &mut destination)
+            .is_ok(),);
+    }
 
     assert_eq!(test_data.expected_output, destination);
 }
 
 #[test]
-fn apply_filter_collection_to_source() {
+fn apply_filter_collection_pattern_matching() {
     let test_data = load_test_data("apply_filter_collection_pattern_matching");
 
     let mut destination = test_data.input.clone();
-    assert!(test_data
-        .filter_collection
-        .apply(&test_data.input, &mut destination)
-        .is_ok(),);
+    for filter_collection in &test_data.filter_collections {
+        assert!(filter_collection
+            .apply(&test_data.input, &mut destination)
+            .is_ok(),);
+    }
 
     assert_eq!(test_data.expected_output, destination);
 }

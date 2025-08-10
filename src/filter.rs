@@ -279,36 +279,12 @@ impl<T> Filter<T> {
     }
 }
 
-/// Filter collection properties.
-#[derive(Clone, PartialEq, Debug)]
-pub struct FilterCollectionProperties {
-    /// Number of times the filter collection will be applied
-    iterations: u32,
-}
-
-impl Default for FilterCollectionProperties {
-    fn default() -> Self {
-        Self { iterations: 1 }
-    }
-}
-
-impl From<&Properties> for FilterCollectionProperties {
-    fn from(value: &Properties) -> Self {
-        let iterations = match value.get("iterations") {
-            Some(PropertyValue::IntValue(p)) => *p as u32,
-            _ => 1u32,
-        };
-
-        Self { iterations }
-    }
-}
-
 /// A collection of map filters
 #[derive(Default)]
 pub struct FilterCollection<T> {
     /// Vector containing the filters
     pub filters: Vec<Filter<T>>,
-    pub properties: FilterCollectionProperties,
+    pub properties: FilterProperties,
 }
 
 impl<T> FilterCollection<T> {
@@ -319,16 +295,13 @@ impl<T> FilterCollection<T> {
     {
         Self {
             filters: filters.into(),
-            properties: FilterCollectionProperties::default(),
+            properties: FilterProperties::default(),
         }
     }
 
     /// Creates a filter collection from the given array of filters and filter
     /// collection properties.
-    pub fn new_with_properties(
-        filters: &[Filter<T>],
-        properties: FilterCollectionProperties,
-    ) -> Self
+    pub fn new_with_properties(filters: &[Filter<T>], properties: FilterProperties) -> Self
     where
         Filter<T>: Clone,
     {
