@@ -40,6 +40,8 @@ pub struct FilterProperties {
     /// has been applied to a field, that field will not result in any further
     /// pattern matches.
     only_once: bool,
+    /// Number of times to apply the filter collection
+    iterations: u32,
 }
 
 impl From<&Properties> for FilterProperties {
@@ -58,11 +60,16 @@ impl From<&Properties> for FilterProperties {
             Some(PropertyValue::BoolValue(p)) => *p,
             _ => false,
         };
+        let iterations = match value.get("iterations") {
+            Some(PropertyValue::IntValue(p)) => *p as u32,
+            _ => 1u32,
+        };
 
         Self {
             probability,
             apply_to,
             only_once,
+            iterations,
         }
     }
 }
@@ -73,6 +80,7 @@ impl Default for FilterProperties {
             probability: 1.0,
             apply_to: PatternMatching::default(),
             only_once: false,
+            iterations: 1,
         }
     }
 }
@@ -321,8 +329,10 @@ impl<T> FilterCollection<T> {
     where
         T: Clone + PartialEq,
     {
-        for filter in &self.filters {
-            filter.apply(source, destination)?;
+        for _ in 0..self.properties.iterations {
+            for filter in &self.filters {
+                filter.apply(source, destination)?;
+            }
         }
 
         Ok(())

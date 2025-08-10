@@ -40,7 +40,7 @@ impl FilterImporter for TiledFilterImporter {
             return Err(TisuError::Unexpected);
         }
 
-        let mut filter_colletions = Vec::<FilterCollection<Option<u32>>>::new();
+        let mut filter_collections = Vec::<FilterCollection<Option<u32>>>::new();
         for (layer, properties) in load_result.map_layers.iter().zip(layer_properties.iter()) {
             let mut filter_collection =
                 FilterCollection::<Option<u32>>::new_with_properties(&[], properties.clone());
@@ -62,9 +62,9 @@ impl FilterImporter for TiledFilterImporter {
                     idx += 2;
                 }
             }
-            filter_colletions.push(filter_collection);
+            filter_collections.push(filter_collection);
         }
-        Ok(filter_colletions)
+        Ok(filter_collections)
     }
 }
 
