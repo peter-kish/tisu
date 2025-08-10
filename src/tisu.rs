@@ -40,11 +40,16 @@ fn main() {
     let args = CmdLineArgs::parse();
 
     let load_result = TiledMapImporter::load(&args.input).expect("Failed to load map");
-    let filters =
+    let filter_collections =
         TiledFilterImporter::load(&args.filters, args.wildcard).expect("Failed to load filters");
-    let new_map = filters
-        .apply(&load_result.map_layers[0].map)
-        .expect("Failed to apply filters");
+    let mut new_map = load_result.map_layers[0].map.clone();
+
+    for filter_collection in &filter_collections {
+        filter_collection
+            .apply(&load_result.map_layers[0].map, &mut new_map)
+            .expect("Failed to apply filters");
+    }
+
     let tile_size = load_tile_size(&load_result.tileset_path).expect("Failed to load tileset");
     TiledMapExporter::save(&args.output, &new_map, tile_size, &load_result.tileset_path)
         .expect("Failed to save map");

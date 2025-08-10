@@ -98,11 +98,12 @@ impl FilterImporter for TiledFilterImporter {
     fn load(
         file: impl AsRef<std::path::Path>,
         wildcard: Option<u32>,
-    ) -> Result<crate::filter::FilterCollection<Option<u32>>, crate::tisu_error::TisuError> {
+    ) -> Result<Vec<FilterCollection<Option<u32>>>, crate::tisu_error::TisuError> {
         let load_result = TiledMapImporter::load(&file)?;
         let property_layers = load_property_layers(&file)?;
-        let mut filter_collection = FilterCollection::<Option<u32>>::default();
+        let mut filter_colletions = Vec::<FilterCollection<Option<u32>>>::new();
         for layer in &load_result.map_layers {
+            let mut filter_collection = FilterCollection::<Option<u32>>::default();
             let segments = map_segmenter::extract_segments(&layer.map, &None);
             if !segments.is_empty() {
                 let mut idx = 0;
@@ -121,8 +122,9 @@ impl FilterImporter for TiledFilterImporter {
                     idx += 2;
                 }
             }
+            filter_colletions.push(filter_collection);
         }
-        Ok(filter_collection)
+        Ok(filter_colletions)
     }
 }
 
@@ -148,7 +150,7 @@ mod tests {
         let substitute = Map::<Option<u32>>::from_data([[Some(0), Some(0), Some(0)]]).unwrap();
         let filter3 = Filter::new(pattern, substitute, Some(4)).unwrap();
 
-        let filter_collection = TiledFilterImporter::load(
+        let filter_collections = TiledFilterImporter::load(
             format!(
                 "{}/data/test_apply_filter_collection/filter_collection.tmx",
                 env!("CARGO_MANIFEST_DIR"),
@@ -157,8 +159,10 @@ mod tests {
             Some(4),
         );
 
-        assert!(filter_collection.is_ok());
-        let filters = &filter_collection.unwrap().filters;
+        assert!(filter_collections.is_ok());
+        let filter_collections = &filter_collections.unwrap();
+        assert_eq!(filter_collections.len(), 1);
+        let filters = &filter_collections[0].filters;
         assert_eq!(filters[0], filter1);
         assert_eq!(filters[1], filter2);
         assert_eq!(filters[2], filter3);

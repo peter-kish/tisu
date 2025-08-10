@@ -344,17 +344,15 @@ impl<T> FilterCollection<T> {
     ///
     /// Returns an error if any of the filters from the collection can't be
     /// applied to the map.
-    pub fn apply(&self, map: &Map<T>) -> Result<Map<T>, TisuError>
+    pub fn apply(&self, source: &Map<T>, destination: &mut Map<T>) -> Result<(), TisuError>
     where
         T: Clone + PartialEq,
     {
-        let mut destination = map.clone();
-
         for filter in &self.filters {
-            filter.apply(map, &mut destination)?;
+            filter.apply(source, destination)?;
         }
 
-        Ok(destination)
+        Ok(())
     }
 
     pub fn push(&mut self, filter: Filter<T>) {

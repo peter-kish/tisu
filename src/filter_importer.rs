@@ -6,5 +6,5 @@ pub trait FilterImporter {
     fn load(
         file: impl AsRef<Path>,
         wildcard: Option<u32>,
-    ) -> Result<FilterCollection<Option<u32>>, TisuError>;
+    ) -> Result<Vec<FilterCollection<Option<u32>>>, TisuError>;
 }
