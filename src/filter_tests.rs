@@ -189,7 +189,7 @@ fn test_apply_filter_collection_success() {
     // 0 1 1
     let expected_data = [0, 1, 1, 0, 0, 0, 0, 1, 1];
 
-    let result = filter_collection.apply(&map);
+    let result = filter_collection.apply(&map, 1);
 
     assert!(result.is_ok());
     let result_map = result.unwrap();
@@ -204,7 +204,7 @@ fn test_apply_empty_filter_collection() {
     // 1 0 1
     let map = Map::<u32>::from_data([[1, 0, 1], [1, 1, 1], [1, 0, 1]]).unwrap();
     let filter_collection = FilterCollection::new(&[]);
-    let result = filter_collection.apply(&map);
+    let result = filter_collection.apply(&map, 1);
 
     assert!(result.is_ok());
 }
@@ -227,7 +227,7 @@ fn test_apply_filter_collection_failure() {
     let filter2 = Filter::new(pattern2, substitute2, 42).unwrap();
     let filter_collection = FilterCollection::new(&[filter1, filter2]);
 
-    let result = filter_collection.apply(&map);
+    let result = filter_collection.apply(&map, 1);
 
     assert_eq!(result.err().unwrap(), TisuError::InvalidMapSize);
 }
@@ -299,7 +299,10 @@ fn load_test_data(test_name: &str) -> TestData {
 fn apply_filter_collection_simple() {
     let test_data = load_test_data("apply_filter_collection_simple");
 
-    let output = test_data.filter_collection.apply(&test_data.input).unwrap();
+    let output = test_data
+        .filter_collection
+        .apply(&test_data.input, 1)
+        .unwrap();
 
     assert_eq!(test_data.expected_output, output);
 }
@@ -308,7 +311,10 @@ fn apply_filter_collection_simple() {
 fn apply_filter_collection() {
     let test_data = load_test_data("apply_filter_collection");
 
-    let output = test_data.filter_collection.apply(&test_data.input).unwrap();
+    let output = test_data
+        .filter_collection
+        .apply(&test_data.input, 1)
+        .unwrap();
 
     assert_eq!(test_data.expected_output, output);
 }
@@ -317,7 +323,10 @@ fn apply_filter_collection() {
 fn apply_filter_collection_probability() {
     let test_data = load_test_data("apply_filter_collection_probability");
 
-    let output = test_data.filter_collection.apply(&test_data.input).unwrap();
+    let output = test_data
+        .filter_collection
+        .apply(&test_data.input, 1)
+        .unwrap();
 
     assert_eq!(test_data.expected_output, output);
 }
@@ -326,7 +335,10 @@ fn apply_filter_collection_probability() {
 fn apply_filter_collection_to_source() {
     let test_data = load_test_data("apply_filter_collection_pattern_matching");
 
-    let output = test_data.filter_collection.apply(&test_data.input).unwrap();
+    let output = test_data
+        .filter_collection
+        .apply(&test_data.input, 1)
+        .unwrap();
 
     assert_eq!(test_data.expected_output, output);
 }
