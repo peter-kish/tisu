@@ -302,17 +302,14 @@ impl<T> FilterCollection<T> {
     ///
     /// Returns an error if any of the filters from the collection can't be
     /// applied to the map.
-    pub fn apply(&self, map: &Map<T>, iterations: u32) -> Result<Map<T>, TisuError>
+    pub fn apply(&self, map: &Map<T>) -> Result<Map<T>, TisuError>
     where
         T: Clone + PartialEq,
     {
         let mut destination = map.clone();
 
-        for _ in 0..iterations {
-            println!("asd");
-            for filter in &self.filters {
-                filter.apply(map, &mut destination)?;
-            }
+        for filter in &self.filters {
+            filter.apply(map, &mut destination)?;
         }
 
         Ok(destination)
