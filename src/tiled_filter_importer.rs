@@ -48,7 +48,7 @@ impl FilterImporter for TiledFilterImporter {
         for (layer, properties) in load_result.map_layers.iter().zip(layer_properties.iter()) {
             let mut filter_collection =
                 FilterCollection::<Option<u32>>::new_with_properties(&[], properties.clone());
-            let segments = map_segmenter::extract_segments(&layer.map, &None);
+            let segments = map_segmenter::extract_segments(layer, &None);
             if !segments.is_empty() {
                 let mut idx = 0;
                 let mut wildcard = None;
@@ -56,7 +56,7 @@ impl FilterImporter for TiledFilterImporter {
                 if segments.len() % 2 != 0 {
                     // Try to interpret the first segment as a wildcard
                     if segments[0].size() == Vector2::one() {
-                        wildcard = *layer.map.get(segments[0].position())?;
+                        wildcard = *layer.get(segments[0].position())?;
                     }
                     idx = 1;
                 }
@@ -64,8 +64,8 @@ impl FilterImporter for TiledFilterImporter {
                 while idx < segments.len() - 1 {
                     let pattern_rect = segments[idx];
                     let substitute_rect = segments[idx + 1];
-                    let pattern = layer.map.extract_segment(pattern_rect)?;
-                    let substitute = layer.map.extract_segment(substitute_rect)?;
+                    let pattern = layer.extract_segment(pattern_rect)?;
+                    let substitute = layer.extract_segment(substitute_rect)?;
                     let filter = Filter::new_with_properties(
                         pattern,
                         substitute,

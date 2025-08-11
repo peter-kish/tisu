@@ -256,7 +256,7 @@ struct TestData {
 
 fn load_test_map(file_path: impl AsRef<Path>) -> Map<Option<u32>> {
     let result = TiledMapImporter::load(file_path);
-    result.unwrap().map_layers[0].map.clone()
+    result.unwrap().map_layers[0].clone()
 }
 
 fn load_test_data(test_name: &str) -> TestData {

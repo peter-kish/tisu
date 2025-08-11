@@ -39,11 +39,11 @@ fn main() {
     let load_result = TiledMapImporter::load(&args.input).expect("Failed to load map");
     let filter_collections =
         TiledFilterImporter::load(&args.filters).expect("Failed to load filters");
-    let mut new_map = load_result.map_layers[0].map.clone();
+    let mut new_map = load_result.map_layers[0].clone();
 
     for filter_collection in &filter_collections {
         filter_collection
-            .apply(&load_result.map_layers[0].map, &mut new_map)
+            .apply(&load_result.map_layers[0], &mut new_map)
             .expect("Failed to apply filters");
     }
 

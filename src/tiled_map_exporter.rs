@@ -7,6 +7,8 @@ use crate::map_exporter::MapExporter;
 pub struct TiledMapExporter {}
 
 impl MapExporter for TiledMapExporter {
+    type TileType = Option<u32>;
+
     // TODO: Test
     fn save(
         file: impl AsRef<std::path::Path>,
