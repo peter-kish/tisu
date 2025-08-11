@@ -26,8 +26,6 @@ impl TryFrom<&String> for PatternMatching {
     }
 }
 
-type ApplicationMap = Map<bool>;
-
 /// Filter properties.
 #[derive(Clone, PartialEq, Debug)]
 pub struct FilterProperties {
@@ -36,10 +34,6 @@ pub struct FilterProperties {
     probability: f32,
     /// Defines where the filter will be applied (source or destination).
     apply_to: PatternMatching,
-    /// If true, the filter will be applied only once per field. Once a filter
-    /// has been applied to a field, that field will not result in any further
-    /// pattern matches.
-    only_once: bool,
     /// Number of times to apply the filter collection
     iterations: u32,
 }
@@ -56,10 +50,6 @@ impl From<&Properties> for FilterProperties {
             }
             _ => PatternMatching::default(),
         };
-        let only_once = match value.get("only_once") {
-            Some(PropertyValue::BoolValue(p)) => *p,
-            _ => false,
-        };
         let iterations = match value.get("iterations") {
             Some(PropertyValue::IntValue(p)) => *p as u32,
             _ => 1u32,
@@ -68,7 +58,6 @@ impl From<&Properties> for FilterProperties {
         Self {
             probability,
             apply_to,
-            only_once,
             iterations,
         }
     }
@@ -79,7 +68,6 @@ impl Default for FilterProperties {
         Self {
             probability: 1.0,
             apply_to: PatternMatching::default(),
-            only_once: false,
             iterations: 1,
         }
     }
@@ -159,12 +147,7 @@ impl<T> Filter<T> {
     /// Checks if the filter pattern matches at the given position in the given
     /// input map. Optionally, an application map can be used which defines the
     /// fields where the filter has already been applied.
-    pub fn pattern_matches(
-        &self,
-        input: &Map<T>,
-        position: Vector2u,
-        application_map: &Option<ApplicationMap>,
-    ) -> bool
+    pub fn pattern_matches(&self, input: &Map<T>, position: Vector2u) -> bool
     where
         T: PartialEq,
     {
@@ -174,9 +157,6 @@ impl<T> Filter<T> {
         for x in 0..self.pattern.size().x {
             for y in 0..self.pattern.size().y {
                 let point = Vector2u::new(x, y);
-                if Self::already_applied(application_map, position + point) {
-                    return false;
-                }
                 if let Ok(input_field) = input.get(position + point) {
                     if let Ok(pattern_field) = self.pattern.get(point) {
                         if !self.fields_match(input_field, pattern_field) {
@@ -192,16 +172,6 @@ impl<T> Filter<T> {
         true
     }
 
-    fn already_applied(application_map: &Option<ApplicationMap>, point: Vector2u) -> bool {
-        match application_map {
-            None => false,
-            Some(application_map) => match application_map.get(point) {
-                Err(_) => false,
-                Ok(already_applied) => *already_applied,
-            },
-        }
-    }
-
     fn fields_match(&self, input_field: &T, pattern_field: &T) -> bool
     where
         T: PartialEq,
@@ -212,12 +182,8 @@ impl<T> Filter<T> {
     /// Applies the filter substitute to the given input map at the given
     /// position. Optionally, an application map can be used to mark the fields
     /// where the substitute has been applied.
-    pub fn apply_substitute(
-        &self,
-        input: &mut Map<T>,
-        position: Vector2u,
-        application_map: &mut Option<ApplicationMap>,
-    ) where
+    pub fn apply_substitute(&self, input: &mut Map<T>, position: Vector2u)
+    where
         T: Clone + PartialEq,
     {
         for x in 0..self.pattern.size().x {
@@ -225,9 +191,6 @@ impl<T> Filter<T> {
                 let point = Vector2u::new(x, y);
                 if let Ok(substitute_field) = self.substitute.get(point) {
                     self.substitute_field(input, position + point, substitute_field);
-                    if let Some(application_map) = application_map {
-                        _ = application_map.set(position + point, true);
-                    }
                 }
             }
         }
@@ -259,24 +222,18 @@ impl<T> Filter<T> {
         {
             Err(TisuError::InvalidMapSize)
         } else {
-            let mut application_map = if self.properties.only_once {
-                Some(ApplicationMap::new(source.size()))
-            } else {
-                None
-            };
-
             for x in 0..=source.size().x - self.pattern().size().x {
                 for y in 0..=source.size().y - self.pattern().size().y {
                     let point = Vector2u::new(x, y);
                     match self.properties.apply_to {
                         PatternMatching::Destination => {
-                            if self.pattern_matches(destination, point, &application_map) {
-                                self.apply_substitute(destination, point, &mut application_map);
+                            if self.pattern_matches(destination, point) {
+                                self.apply_substitute(destination, point);
                             }
                         }
                         PatternMatching::Source => {
-                            if self.pattern_matches(source, point, &application_map) {
-                                self.apply_substitute(destination, point, &mut application_map);
+                            if self.pattern_matches(source, point) {
+                                self.apply_substitute(destination, point);
                             }
                         }
                     }
