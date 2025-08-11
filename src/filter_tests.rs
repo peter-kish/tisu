@@ -267,7 +267,6 @@ fn load_test_data(test_name: &str) -> TestData {
             test_name
         )
         .as_str(),
-        Some(4),
     )
     .unwrap();
 

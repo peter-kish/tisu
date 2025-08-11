@@ -23,9 +23,6 @@ struct CmdLineArgs {
     /// Filters file path
     #[arg(short, long)]
     filters: PathBuf,
-    /// Wildcard tile index
-    #[arg(short, long)]
-    wildcard: Option<u32>,
 }
 
 fn load_tile_size(file: impl AsRef<Path>) -> Result<Vector2u, TisuError> {
@@ -41,7 +38,7 @@ fn main() {
 
     let load_result = TiledMapImporter::load(&args.input).expect("Failed to load map");
     let filter_collections =
-        TiledFilterImporter::load(&args.filters, args.wildcard).expect("Failed to load filters");
+        TiledFilterImporter::load(&args.filters).expect("Failed to load filters");
     let mut new_map = load_result.map_layers[0].map.clone();
 
     for filter_collection in &filter_collections {

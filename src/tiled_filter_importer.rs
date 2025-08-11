@@ -7,6 +7,7 @@ use crate::{
     map_segmenter,
     tiled_map_importer::TiledMapImporter,
     tisu_error::TisuError,
+    vector2::Vector2,
 };
 
 fn load_layer_properties(
@@ -31,7 +32,6 @@ pub struct TiledFilterImporter;
 impl FilterImporter for TiledFilterImporter {
     fn load(
         file: impl AsRef<std::path::Path>,
-        wildcard: Option<u32>,
     ) -> Result<Vec<FilterCollection<Option<u32>>>, TisuError> {
         let load_result = TiledMapImporter::load(&file)?;
         let layer_properties = load_layer_properties(&file)?;
@@ -47,6 +47,11 @@ impl FilterImporter for TiledFilterImporter {
             let segments = map_segmenter::extract_segments(&layer.map, &None);
             if !segments.is_empty() {
                 let mut idx = 0;
+                let mut wildcard = None;
+                if (segments.len() % 2 != 0) && segments[0].size() == Vector2::one() {
+                    wildcard = *layer.map.get(segments[0].position())?;
+                    idx = 1;
+                }
                 while idx < segments.len() - 1 {
                     let pattern_rect = segments[idx];
                     let substitute_rect = segments[idx + 1];
@@ -83,7 +88,7 @@ mod tests {
         let pattern =
             Map::<Option<u32>>::from_data([[Some(2), Some(2)], [Some(2), Some(2)]]).unwrap();
         let substitute =
-            Map::<Option<u32>>::from_data([[Some(2), Some(3)], [Some(2), Some(2)]]).unwrap();
+            Map::<Option<u32>>::from_data([[Some(4), Some(3)], [Some(4), Some(4)]]).unwrap();
         let filter2 = Filter::new(pattern, substitute, Some(4)).unwrap();
 
         let pattern = Map::<Option<u32>>::from_data([[Some(3), Some(4), Some(3)]]).unwrap();
@@ -96,7 +101,6 @@ mod tests {
                 env!("CARGO_MANIFEST_DIR"),
             )
             .as_str(),
-            Some(4),
         );
 
         assert!(filter_collections.is_ok());
