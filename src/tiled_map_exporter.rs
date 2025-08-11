@@ -12,7 +12,7 @@ impl MapExporter for TiledMapExporter {
     // TODO: Test
     fn save(
         file: impl AsRef<std::path::Path>,
-        map: &crate::map::Map<Option<u32>>,
+        map: &crate::map::Map<Self::TileType>,
         tile_size: crate::vector2::Vector2u,
         tileset_path: impl AsRef<std::path::Path>,
     ) -> Result<(), crate::tisu_error::TisuError> {
@@ -76,7 +76,7 @@ impl MapExporter for TiledMapExporter {
         let data: Vec<String> = map
             .data()
             .iter()
-            .map(|input: &Option<u32>| {
+            .map(|input: &Self::TileType| {
                 match input {
                     Some(i) => i + 1,
                     None => 0,

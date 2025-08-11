@@ -11,8 +11,10 @@ pub struct TiledMapImporter {}
 impl TiledMapImporter {
     fn load_finite_tile_layer(
         layer: &tiled::FiniteTileLayer,
-    ) -> Result<Map<Option<u32>>, TisuError> {
-        let mut map = Map::<Option<u32>>::new((layer.width(), layer.height()).into());
+    ) -> Result<Map<<TiledMapImporter as MapImporter>::TileType>, TisuError> {
+        let mut map = Map::<<TiledMapImporter as MapImporter>::TileType>::new(
+            (layer.width(), layer.height()).into(),
+        );
         for x in 0..layer.width() {
             for y in 0..layer.height() {
                 if let Some(tile) = layer.get_tile(x as i32, y as i32) {
