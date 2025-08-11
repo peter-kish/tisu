@@ -21,7 +21,11 @@ fn load_layer_properties(
     let mut result = vec![];
     for layer in tmx_map.layers() {
         if let tiled::LayerType::Tiles(_) = layer.layer_type() {
-            result.push(FilterProperties::from(&layer.properties));
+            let mut filter_properties = FilterProperties::from(&layer.properties);
+            if !layer.visible {
+                filter_properties.ignore = true;
+            }
+            result.push(filter_properties);
         }
     }
     Ok(result)

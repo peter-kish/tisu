@@ -31,11 +31,14 @@ impl TryFrom<&String> for PatternMatching {
 pub struct FilterProperties {
     /// Probability of the filter being applied on each pattern match (clamped
     /// to range [0..1]).
-    probability: f32,
+    pub probability: f32,
     /// Defines where the filter will be applied (source or destination).
-    apply_to: PatternMatching,
+    pub apply_to: PatternMatching,
     /// Number of times to apply the filter collection
-    iterations: u32,
+    pub iterations: u32,
+    /// If true, the filter will not be applied (this does not result in an
+    /// error)
+    pub ignore: bool,
 }
 
 impl From<&Properties> for FilterProperties {
@@ -54,11 +57,16 @@ impl From<&Properties> for FilterProperties {
             Some(PropertyValue::IntValue(p)) => *p as u32,
             _ => 1u32,
         };
+        let ignore = match value.get("ignore") {
+            Some(PropertyValue::BoolValue(p)) => *p,
+            _ => false,
+        };
 
         Self {
             probability,
             apply_to,
             iterations,
+            ignore,
         }
     }
 }
@@ -69,6 +77,7 @@ impl Default for FilterProperties {
             probability: 1.0,
             apply_to: PatternMatching::default(),
             iterations: 1,
+            ignore: false,
         }
     }
 }
@@ -216,6 +225,10 @@ impl<T> Filter<T> {
         Map<T>: Clone,
         T: Clone + PartialEq,
     {
+        if self.properties.ignore {
+            return Ok(());
+        }
+
         if source.size() != destination.size()
             || source.size().x < self.pattern().size().x
             || source.size().y < self.pattern().size().y
