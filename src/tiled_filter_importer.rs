@@ -52,10 +52,15 @@ impl FilterImporter for TiledFilterImporter {
             if !segments.is_empty() {
                 let mut idx = 0;
                 let mut wildcard = None;
-                if (segments.len() % 2 != 0) && segments[0].size() == Vector2::one() {
-                    wildcard = *layer.map.get(segments[0].position())?;
+
+                if segments.len() % 2 != 0 {
+                    // Try to interpret the first segment as a wildcard
+                    if segments[0].size() == Vector2::one() {
+                        wildcard = *layer.map.get(segments[0].position())?;
+                    }
                     idx = 1;
                 }
+
                 while idx < segments.len() - 1 {
                     let pattern_rect = segments[idx];
                     let substitute_rect = segments[idx + 1];
