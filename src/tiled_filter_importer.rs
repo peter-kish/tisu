@@ -34,9 +34,11 @@ fn load_layer_properties(
 pub struct TiledFilterImporter;
 
 impl FilterImporter for TiledFilterImporter {
+    type TileType = Option<u32>;
+
     fn load(
         file: impl AsRef<std::path::Path>,
-    ) -> Result<Vec<FilterCollection<Option<u32>>>, TisuError> {
+    ) -> Result<Vec<FilterCollection<Self::TileType>>, TisuError> {
         let load_result = TiledMapImporter::load(&file)?;
         let layer_properties = load_layer_properties(&file)?;
 
@@ -44,10 +46,10 @@ impl FilterImporter for TiledFilterImporter {
             return Err(TisuError::Unexpected);
         }
 
-        let mut filter_collections = Vec::<FilterCollection<Option<u32>>>::new();
+        let mut filter_collections = Vec::<FilterCollection<Self::TileType>>::new();
         for (layer, properties) in load_result.map_layers.iter().zip(layer_properties.iter()) {
             let mut filter_collection =
-                FilterCollection::<Option<u32>>::new_with_properties(&[], properties.clone());
+                FilterCollection::<Self::TileType>::new_with_properties(&[], properties.clone());
             let segments = map_segmenter::extract_segments(layer, &None);
             if !segments.is_empty() {
                 let mut idx = 0;
