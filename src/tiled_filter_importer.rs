@@ -6,6 +6,7 @@ use crate::{
     map_importer::MapImporter,
     map_segmenter,
     tiled_map_importer::TiledMapImporter,
+    tiled_tile::TiledTile,
     tisu_error::TisuError,
     vector2::Vector2,
 };
@@ -34,7 +35,7 @@ fn load_layer_properties(
 pub struct TiledFilterImporter;
 
 impl FilterImporter for TiledFilterImporter {
-    type TileType = Option<u32>;
+    type TileType = TiledTile;
 
     fn load(
         file: impl AsRef<std::path::Path>,
@@ -50,15 +51,15 @@ impl FilterImporter for TiledFilterImporter {
         for (layer, properties) in load_result.map_layers.iter().zip(layer_properties.iter()) {
             let mut filter_collection =
                 FilterCollection::<Self::TileType>::new_with_properties(&[], properties.clone());
-            let segments = map_segmenter::extract_segments(layer, &None);
+            let segments = map_segmenter::extract_segments(layer, &TiledTile::default());
             if !segments.is_empty() {
                 let mut idx = 0;
-                let mut wildcard = None;
+                let mut wildcard = TiledTile::default();
 
                 if segments.len() % 2 != 0 {
                     // Try to interpret the first segment as a wildcard
                     if segments[0].size() == Vector2::one() {
-                        wildcard = *layer.get(segments[0].position())?;
+                        wildcard = layer.get(segments[0].position())?.clone();
                     }
                     idx = 1;
                 }
@@ -71,7 +72,7 @@ impl FilterImporter for TiledFilterImporter {
                     let filter = Filter::new_with_properties(
                         pattern,
                         substitute,
-                        wildcard,
+                        wildcard.clone(),
                         properties.clone(),
                     )?;
                     filter_collection.push(filter);
@@ -90,21 +91,28 @@ mod tests {
 
     use super::*;
 
+    fn create_tiled_map<const N: usize, const M: usize>(data: [[u32; N]; M]) -> Map<TiledTile> {
+        Map::<TiledTile>::from_data(data.map(|x| x.map(TiledTile::from))).unwrap()
+    }
+
     #[test]
     fn test_load() {
-        let pattern = Map::<Option<u32>>::from_data([[Some(0), Some(1)]]).unwrap();
-        let substitute = Map::<Option<u32>>::from_data([[Some(1), Some(1)]]).unwrap();
-        let filter1 = Filter::new(pattern, substitute, Some(4)).unwrap();
+        let wildcard = TiledTile {
+            index: Some(4),
+            ..Default::default()
+        };
 
-        let pattern =
-            Map::<Option<u32>>::from_data([[Some(2), Some(2)], [Some(2), Some(2)]]).unwrap();
-        let substitute =
-            Map::<Option<u32>>::from_data([[Some(4), Some(3)], [Some(4), Some(4)]]).unwrap();
-        let filter2 = Filter::new(pattern, substitute, Some(4)).unwrap();
+        let pattern = create_tiled_map([[0, 1]]);
+        let substitute = create_tiled_map([[1, 1]]);
+        let filter1 = Filter::new(pattern, substitute, wildcard.clone()).unwrap();
 
-        let pattern = Map::<Option<u32>>::from_data([[Some(3), Some(4), Some(3)]]).unwrap();
-        let substitute = Map::<Option<u32>>::from_data([[Some(0), Some(0), Some(0)]]).unwrap();
-        let filter3 = Filter::new(pattern, substitute, Some(4)).unwrap();
+        let pattern = create_tiled_map([[2, 2], [2, 2]]);
+        let substitute = create_tiled_map([[4, 3], [4, 4]]);
+        let filter2 = Filter::new(pattern, substitute, wildcard.clone()).unwrap();
+
+        let pattern = create_tiled_map([[3, 4, 3]]);
+        let substitute = create_tiled_map([[0, 0, 0]]);
+        let filter3 = Filter::new(pattern, substitute, wildcard.clone()).unwrap();
 
         let filter_collections = TiledFilterImporter::load(
             format!(

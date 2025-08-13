@@ -7,6 +7,7 @@ use crate::{
     map_importer::MapImporter,
     tiled_filter_importer::TiledFilterImporter,
     tiled_map_importer::TiledMapImporter,
+    tiled_tile::TiledTile,
     tisu_error::TisuError,
 };
 
@@ -249,12 +250,12 @@ fn test_filter_collection_push() {
 }
 
 struct TestData {
-    filter_collections: Vec<FilterCollection<Option<u32>>>,
-    input: Map<Option<u32>>,
-    expected_output: Map<Option<u32>>,
+    filter_collections: Vec<FilterCollection<TiledTile>>,
+    input: Map<TiledTile>,
+    expected_output: Map<TiledTile>,
 }
 
-fn load_test_map(file_path: impl AsRef<Path>) -> Map<Option<u32>> {
+fn load_test_map(file_path: impl AsRef<Path>) -> Map<TiledTile> {
     let result = TiledMapImporter::load(file_path);
     result.unwrap().map_layers[0].clone()
 }

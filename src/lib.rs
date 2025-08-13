@@ -8,6 +8,7 @@ pub mod rect2;
 pub mod tiled_filter_importer;
 pub mod tiled_map_exporter;
 pub mod tiled_map_importer;
+pub mod tiled_tile;
 pub mod tisu_error;
 pub mod vector2;
 

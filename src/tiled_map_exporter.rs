@@ -2,12 +2,12 @@ use std::fs::File;
 
 use xml::{common::XmlVersion, writer::XmlEvent, EmitterConfig};
 
-use crate::map_exporter::MapExporter;
+use crate::{map_exporter::MapExporter, tiled_tile::TiledTile};
 
 pub struct TiledMapExporter {}
 
 impl MapExporter for TiledMapExporter {
-    type TileType = Option<u32>;
+    type TileType = TiledTile;
 
     // TODO: Test
     fn save(
@@ -76,13 +76,7 @@ impl MapExporter for TiledMapExporter {
         let data: Vec<String> = map
             .data()
             .iter()
-            .map(|input: &Self::TileType| {
-                match input {
-                    Some(i) => i + 1,
-                    None => 0,
-                }
-                .to_string()
-            })
+            .map(|input: &Self::TileType| input.to_string())
             .collect();
         let data_str = data.as_slice().join(", ");
         let event = XmlEvent::characters(&data_str);

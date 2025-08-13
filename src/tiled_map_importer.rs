@@ -3,6 +3,7 @@ use tiled::Loader;
 use crate::{
     map::Map,
     map_importer::{LoadResult, MapImporter},
+    tiled_tile::TiledTile,
     tisu_error::TisuError,
 };
 
@@ -18,9 +19,17 @@ impl TiledMapImporter {
         for x in 0..layer.width() {
             for y in 0..layer.height() {
                 if let Some(tile) = layer.get_tile(x as i32, y as i32) {
-                    map.set((x, y).into(), Some(tile.id()))?;
+                    map.set(
+                        (x, y).into(),
+                        TiledTile {
+                            index: Some(tile.id()),
+                            flip_h: tile.flip_h,
+                            flip_v: tile.flip_v,
+                            flip_d: tile.flip_d,
+                        },
+                    )?;
                 } else {
-                    map.set((x, y).into(), None)?;
+                    map.set((x, y).into(), TiledTile::default())?;
                 }
             }
         }
@@ -30,7 +39,7 @@ impl TiledMapImporter {
 }
 
 impl MapImporter for TiledMapImporter {
-    type TileType = Option<u32>;
+    type TileType = TiledTile;
 
     fn load(file: impl AsRef<std::path::Path>) -> Result<LoadResult<Self::TileType>, TisuError> {
         let mut loader = Loader::new();
@@ -69,10 +78,16 @@ mod tests {
         let load_result = result.unwrap();
         assert_eq!(load_result.map_layers.len(), 1);
         assert_eq!(load_result.map_layers[0].size(), (3, 3).into());
-        assert_eq!(load_result.map_layers[0].get((0, 0).into()).unwrap(), &None);
+        assert_eq!(
+            load_result.map_layers[0].get((0, 0).into()).unwrap(),
+            &TiledTile::default()
+        );
         assert_eq!(
             load_result.map_layers[0].get((1, 1).into()).unwrap(),
-            &Some(3)
+            &TiledTile {
+                index: Some(3),
+                ..Default::default()
+            }
         );
     }
 
