@@ -20,7 +20,8 @@ fn load_layer_properties(
         .map_err(|_| TisuError::InvalidArgument)?;
 
     let mut result = vec![];
-    for layer in tmx_map.layers() {
+    // Collect the layers into a Vec to traverse it in reverse order
+    for layer in tmx_map.layers().collect::<Vec<_>>().iter().rev() {
         if let tiled::LayerType::Tiles(_) = layer.layer_type() {
             let mut filter_properties = FilterProperties::from(&layer.properties);
             if !layer.visible {

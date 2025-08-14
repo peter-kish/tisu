@@ -51,7 +51,8 @@ impl MapImporter for TiledMapImporter {
             map_layers: vec![],
             tileset_path: tmx_map.tilesets()[0].source.clone(),
         };
-        for layer in tmx_map.layers() {
+        // Collect the layers into a Vec to traverse it in reverse order
+        for layer in tmx_map.layers().collect::<Vec<_>>().iter().rev() {
             if let tiled::LayerType::Tiles(tiled::TileLayer::Finite(finite_tile_layer)) =
                 layer.layer_type()
             {
