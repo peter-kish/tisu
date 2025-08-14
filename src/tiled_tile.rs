@@ -16,21 +16,23 @@ pub struct TiledTile {
 
 impl From<&TiledTile> for u32 {
     fn from(value: &TiledTile) -> Self {
-        let mut result = match value.index {
-            Some(i) => i + 1,
-            None => 0,
-        };
-        if value.flip_h {
-            result |= FLIPPED_HORIZONTALLY_FLAG
-        }
-        if value.flip_v {
-            result |= FLIPPED_VERTICALLY_FLAG
-        }
-        if value.flip_d {
-            result |= FLIPPED_DIAGONALLY_FLAG
-        }
+        match value.index {
+            Some(i) => {
+                let mut result = i + 1;
+                if value.flip_h {
+                    result |= FLIPPED_HORIZONTALLY_FLAG
+                }
+                if value.flip_v {
+                    result |= FLIPPED_VERTICALLY_FLAG
+                }
+                if value.flip_d {
+                    result |= FLIPPED_DIAGONALLY_FLAG
+                }
 
-        result
+                result
+            }
+            None => 0,
+        }
     }
 }
 
@@ -44,11 +46,18 @@ impl From<u32> for TiledTile {
     fn from(value: u32) -> Self {
         let flags = value & ALL_FLIP_FLAGS;
         let gid = value & !ALL_FLIP_FLAGS;
-        Self {
-            index: Some(gid),
-            flip_h: flags & FLIPPED_HORIZONTALLY_FLAG == FLIPPED_HORIZONTALLY_FLAG,
-            flip_v: flags & FLIPPED_VERTICALLY_FLAG == FLIPPED_VERTICALLY_FLAG,
-            flip_d: flags & FLIPPED_DIAGONALLY_FLAG == FLIPPED_DIAGONALLY_FLAG,
+        if gid == 0 {
+            Self {
+                index: None,
+                ..Default::default()
+            }
+        } else {
+            Self {
+                index: Some(gid - 1),
+                flip_h: flags & FLIPPED_HORIZONTALLY_FLAG == FLIPPED_HORIZONTALLY_FLAG,
+                flip_v: flags & FLIPPED_VERTICALLY_FLAG == FLIPPED_VERTICALLY_FLAG,
+                flip_d: flags & FLIPPED_DIAGONALLY_FLAG == FLIPPED_DIAGONALLY_FLAG,
+            }
         }
     }
 }

@@ -92,7 +92,13 @@ mod tests {
     use super::*;
 
     fn create_tiled_map<const N: usize, const M: usize>(data: [[u32; N]; M]) -> Map<TiledTile> {
-        Map::<TiledTile>::from_data(data.map(|x| x.map(TiledTile::from))).unwrap()
+        Map::<TiledTile>::from_data(data.map(|x| {
+            x.map(|x| TiledTile {
+                index: Some(x),
+                ..Default::default()
+            })
+        }))
+        .unwrap()
     }
 
     #[test]
