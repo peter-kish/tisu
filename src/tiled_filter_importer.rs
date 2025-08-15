@@ -22,15 +22,27 @@ fn load_layer_properties(
     let mut result = vec![];
     // Collect the layers into a Vec to traverse it in reverse order
     for layer in tmx_map.layers().collect::<Vec<_>>().iter().rev() {
-        if let tiled::LayerType::Tiles(_) = layer.layer_type() {
+        process_layer(layer, &mut result);
+    }
+    Ok(result)
+}
+
+fn process_layer(layer: &tiled::Layer, result: &mut Vec<FilterProperties>) {
+    match layer.layer_type() {
+        tiled::LayerType::Tiles(_) => {
             let mut filter_properties = FilterProperties::from(&layer.properties);
             if !layer.visible {
                 filter_properties.ignore = true;
             }
             result.push(filter_properties);
         }
+        tiled::LayerType::Group(group) => {
+            for layer in group.layers().collect::<Vec<_>>().iter().rev() {
+                process_layer(layer, result);
+            }
+        }
+        _ => (),
     }
-    Ok(result)
 }
 
 pub struct TiledFilterImporter;

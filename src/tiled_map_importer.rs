@@ -36,6 +36,22 @@ impl TiledMapImporter {
 
         Ok(map)
     }
+
+    fn process_layer(layer: &tiled::Layer, result: &mut Vec<Map<TiledTile>>) {
+        match layer.layer_type() {
+            tiled::LayerType::Tiles(tiled::TileLayer::Finite(finite_tile_layer)) => {
+                if let Ok(map) = Self::load_finite_tile_layer(&finite_tile_layer) {
+                    result.push(map);
+                }
+            }
+            tiled::LayerType::Group(group) => {
+                for layer in group.layers().collect::<Vec<_>>().iter().rev() {
+                    Self::process_layer(layer, result);
+                }
+            }
+            _ => (),
+        }
+    }
 }
 
 impl MapImporter for TiledMapImporter {
@@ -53,13 +69,7 @@ impl MapImporter for TiledMapImporter {
         };
         // Collect the layers into a Vec to traverse it in reverse order
         for layer in tmx_map.layers().collect::<Vec<_>>().iter().rev() {
-            if let tiled::LayerType::Tiles(tiled::TileLayer::Finite(finite_tile_layer)) =
-                layer.layer_type()
-            {
-                let map = Self::load_finite_tile_layer(&finite_tile_layer)?;
-
-                result.map_layers.push(map);
-            }
+            Self::process_layer(layer, &mut result.map_layers);
         }
         Ok(result)
     }
