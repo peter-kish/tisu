@@ -22,27 +22,44 @@ fn load_layer_properties(
     let mut result = vec![];
     // Collect the layers into a Vec to traverse it in reverse order
     for layer in tmx_map.layers().collect::<Vec<_>>().iter().rev() {
-        process_layer(layer, &mut result);
+        process_layer(layer, &tiled::Properties::new(), &mut result);
     }
     Ok(result)
 }
 
-fn process_layer(layer: &tiled::Layer, result: &mut Vec<FilterProperties>) {
+fn process_layer(
+    layer: &tiled::Layer,
+    parent_properties: &tiled::Properties,
+    result: &mut Vec<FilterProperties>,
+) {
+    let properties = override_properties(parent_properties, &layer.properties);
     match layer.layer_type() {
         tiled::LayerType::Tiles(_) => {
-            let mut filter_properties = FilterProperties::from(&layer.properties);
+            let mut filter_properties = FilterProperties::from(&properties);
             if !layer.visible {
                 filter_properties.ignore = true;
             }
             result.push(filter_properties);
         }
         tiled::LayerType::Group(group) => {
-            for layer in group.layers().collect::<Vec<_>>().iter().rev() {
-                process_layer(layer, result);
+            for child_layer in group.layers().collect::<Vec<_>>().iter().rev() {
+                process_layer(child_layer, &properties, result);
             }
         }
         _ => (),
     }
+}
+
+fn override_properties(
+    parent_properties: &tiled::Properties,
+    child_properties: &tiled::Properties,
+) -> tiled::Properties {
+    // TODO: Test
+    let mut result = parent_properties.clone();
+    for (key, value) in child_properties {
+        result.insert(key.clone(), value.clone());
+    }
+    result
 }
 
 pub struct TiledFilterImporter;
