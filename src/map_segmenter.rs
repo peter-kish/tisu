@@ -104,13 +104,13 @@ where
     } else {
         let mut size = Vector2u::default();
 
-        for x in field.x..map.size().x {
+        for x in field.x..=map.size().x {
             if is_field_transparent(map, transparent_value, (x, field.y).into()) {
                 size.x = x - field.x;
                 break;
             }
         }
-        for y in field.y..map.size().y {
+        for y in field.y..=map.size().y {
             if is_field_transparent(map, transparent_value, (field.x, y).into()) {
                 size.y = y - field.y;
                 break;
