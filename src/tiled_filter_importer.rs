@@ -54,7 +54,6 @@ fn override_properties(
     parent_properties: &tiled::Properties,
     child_properties: &tiled::Properties,
 ) -> tiled::Properties {
-    // TODO: Test
     let mut result = parent_properties.clone();
     for (key, value) in child_properties {
         result.insert(key.clone(), value.clone());
@@ -117,6 +116,8 @@ impl FilterImporter for TiledFilterImporter {
 
 #[cfg(test)]
 mod tests {
+    use tiled::PropertyValue;
+
     use crate::map::Map;
 
     use super::*;
@@ -129,6 +130,36 @@ mod tests {
             })
         }))
         .unwrap()
+    }
+
+    #[test]
+    fn test_override_different_properties() {
+        let parent_properties: tiled::Properties =
+            [(String::from("prop1"), PropertyValue::IntValue(1))].into();
+        let child_properties: tiled::Properties =
+            [(String::from("prop2"), PropertyValue::IntValue(2))].into();
+
+        let result = override_properties(&parent_properties, &child_properties);
+
+        assert_eq!(result.len(), 2);
+        assert!(result.contains_key("prop1"));
+        assert_eq!(result.get("prop1").unwrap(), &PropertyValue::IntValue(1));
+        assert!(result.contains_key("prop2"));
+        assert_eq!(result.get("prop2").unwrap(), &PropertyValue::IntValue(2));
+    }
+
+    #[test]
+    fn test_override_same_property() {
+        let parent_properties: tiled::Properties =
+            [(String::from("prop1"), PropertyValue::IntValue(1))].into();
+        let child_properties: tiled::Properties =
+            [(String::from("prop1"), PropertyValue::IntValue(2))].into();
+
+        let result = override_properties(&parent_properties, &child_properties);
+
+        assert_eq!(result.len(), 1);
+        assert!(result.contains_key("prop1"));
+        assert_eq!(result.get("prop1").unwrap(), &PropertyValue::IntValue(2));
     }
 
     #[test]
