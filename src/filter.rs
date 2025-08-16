@@ -33,7 +33,7 @@ pub struct FilterProperties {
     /// to range [0..1]).
     pub probability: f32,
     /// Defines where the filter will be applied (source or destination).
-    pub apply_to: PatternMatching,
+    pub pattern_matching: PatternMatching,
     /// Number of times to apply the filter collection
     pub iterations: u32,
     /// If true, the filter will not be applied (this does not result in an
@@ -47,7 +47,7 @@ impl From<&Properties> for FilterProperties {
             Some(PropertyValue::FloatValue(p)) => *p,
             _ => 1.0,
         };
-        let apply_to: PatternMatching = match value.get("pattern_matching") {
+        let pattern_matching: PatternMatching = match value.get("pattern_matching") {
             Some(PropertyValue::StringValue(p)) => {
                 p.try_into().unwrap_or(PatternMatching::default())
             }
@@ -64,7 +64,7 @@ impl From<&Properties> for FilterProperties {
 
         Self {
             probability,
-            apply_to,
+            pattern_matching,
             iterations,
             ignore,
         }
@@ -75,7 +75,7 @@ impl Default for FilterProperties {
     fn default() -> Self {
         Self {
             probability: 1.0,
-            apply_to: PatternMatching::default(),
+            pattern_matching: PatternMatching::default(),
             iterations: 1,
             ignore: false,
         }
@@ -238,7 +238,7 @@ impl<T> Filter<T> {
             for x in 0..=source.size().x - self.pattern().size().x {
                 for y in 0..=source.size().y - self.pattern().size().y {
                     let point = Vector2u::new(x, y);
-                    match self.properties.apply_to {
+                    match self.properties.pattern_matching {
                         PatternMatching::Destination => {
                             if self.pattern_matches(destination, point) {
                                 self.apply_substitute(destination, point);

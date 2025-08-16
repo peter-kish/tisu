@@ -118,7 +118,7 @@ impl FilterImporter for TiledFilterImporter {
 mod tests {
     use tiled::PropertyValue;
 
-    use crate::map::Map;
+    use crate::{filter::PatternMatching, map::Map};
 
     use super::*;
 
@@ -160,6 +160,29 @@ mod tests {
         assert_eq!(result.len(), 1);
         assert!(result.contains_key("prop1"));
         assert_eq!(result.get("prop1").unwrap(), &PropertyValue::IntValue(2));
+    }
+
+    #[test]
+    fn test_load_layer_properties() {
+        let result = load_layer_properties(
+            format!(
+                "{}/data/test_apply_filter_collection_pattern_matching/filter_collection.tmx",
+                env!("CARGO_MANIFEST_DIR"),
+            )
+            .as_str(),
+        );
+
+        assert!(result.is_ok());
+        let result = result.unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(
+            result[0],
+            FilterProperties {
+                pattern_matching: PatternMatching::Destination,
+                ..Default::default()
+            }
+        );
+        assert_eq!(result[1], FilterProperties::default());
     }
 
     #[test]
