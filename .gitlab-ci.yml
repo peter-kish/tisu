@@ -30,7 +30,4 @@ deploy:
   script:
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo build --release
-  artifacts:
-    paths:
-      - target/release/tisu
   environment: production
