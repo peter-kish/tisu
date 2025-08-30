@@ -5,11 +5,17 @@ TiSu is a tool for processing 2d tile based maps by replacing predefined pattern
 
 ## Basic Usage (with [Tiled Map Editor](https://www.mapeditor.org/))
 
+Run using Cargo:
+
+```bash
+cargo run --input input.tmx --filters filters.tmx --output output.tmx
+```
+
 TiSu currently only supports .tmx (Tiled maps) and .tsx (Tiled tile sets) files.
 
 ### Filters
 
-Filters are also parsed from a Tiled map in the following way:
+Filters are also parsed from a Tiled map (.tmx) in the following way:
 * Transparent fields are ignored
 * Rectangular areas of the map are detected and grouped into pairs (starting from top-left)
 * The first area in that pair represents the pattern while the second is the substitute
