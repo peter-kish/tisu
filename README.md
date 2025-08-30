@@ -28,7 +28,7 @@ Layer properties are interpreted as filter properties. The following properties 
 * `probability`: `float` - Has a value in the range `[0..1]` (default is `1`). Defines the probability at which a substitution will happen (where 0.0 means 0% and 1.0 means 100%).
 * `iterations`: `int` - Defines how many times a filter will be applied to the whole map (default is `1`).
 * `ignore`: `bool` - If `true`, the filter will be ignored (default is `false`).
-* `pattern_matching`: `string` - Can be set to `source` or `destination` (default is `source`). When a filter is applied to a map, first a copy is created on which all substitutions are performed and will represent the result of the filtering. This property defines on which of these two maps will pattern matching be performed. `source` refers to the original map, while `destination` refers to the copy. Performing pattern matching on the `destination` map can greatly modify the filtering process, as it takes into account substitutions that were performed in previous filtering steps.
+* `pattern_matching`: `string` - Can be set to `source` or `destination` (default is `source`). When a filter is applied to a map, first a copy is created on which all substitutions are done and will represent the result of the filtering. This property defines on which of these two maps will pattern matching be performed. `source` refers to the original map, while `destination` refers to the copy. Performing pattern matching on the `destination` map can greatly impact the result of filtering, as it takes into account substitutions that were performed in previous filtering steps.
 
 ### The GUI
 
